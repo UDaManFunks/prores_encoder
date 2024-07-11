@@ -1,0 +1,34 @@
+BINDIR = bin
+CC = cl
+SUBDIRS = wrapper
+BUILDDIR = build
+CFLAGS = -Iinclude -I../ffmpeg_pkg/include /Fo:$(BUILDDIR)\ /c /EHsc /std:c++17 -O2
+LDFLAGS = /DLL wrapper/$(BUILDDIR)/*.obj $(BUILDDIR)/*.obj ../ffmpeg_pkg/lib/libavcodec.a ../ffmpeg_pkg/lib/libavdevice.a ../ffmpeg_pkg/lib/libavfilter.a ../ffmpeg_pkg/lib/libavformat.a ../ffmpeg_pkg/lib/libavutil.a ../ffmpeg_pkg/lib/libswresample.a ../ffmpeg_pkg/lib/libswscale.a ../ffmpeg_pkg/lib/libavformat.a
+TARGET = prores_encoder.dvcp
+OBJS = plugin.obj prores_encoder.obj
+
+all: prereq make-subdirs $(OBJS) $(TARGET)
+
+prereq:
+	mkdir $(BUILDDIR)
+	mkdir $(BINDIR)
+		
+.cpp.obj:
+	$(CC) $(CFLAGS) $*.cpp
+
+$(TARGET):
+	link $(LDFLAGS) /OUT:$(BINDIR)/$(TARGET)
+
+clean: clean-subdirs
+	rmdir /S /Q $(BUILDDIR)
+	rmdir /S /Q $(BINDIR)
+
+make-subdirs:
+	cd wrapper
+	nmake /f NMakefile
+	cd ..
+
+clean-subdirs:
+	cd wrapper
+	nmake clean /f NMakefile
+	cd ..

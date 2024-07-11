@@ -1,0 +1,15 @@
+CC=cl
+BUILDDIR=build
+CFLAGS=-I..\include -O2 /Fo:$(BUILDDIR)\ /c
+OBJS = host_api.obj plugin_api.obj
+
+all: prereq $(OBJS)
+
+prereq:
+	mkdir $(BUILDDIR)
+
+.cpp.obj:
+	$(CC) $(CFLAGS) $*.cpp
+
+clean:
+	rmdir /S /Q $(BUILDDIR)
