@@ -12,6 +12,7 @@ extern "C" {
 #include "libavfilter/avfilter.h"
 #include "libavformat/avformat.h"
 #include "libavutil/avutil.h"
+#include "libswscale/swscale.h"
 }
 
 struct ProfileMap {
@@ -66,4 +67,5 @@ private:
 	AVCodecContext* m_pContext;
 	AVPacket* m_pPkt;
 	AVFrame* m_pFrame;
+	SwsContext* m_pSwsContext;
 };

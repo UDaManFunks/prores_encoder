@@ -3,7 +3,7 @@ CC = cl
 SUBDIRS = wrapper
 BUILDDIR = build
 CFLAGS = -Iinclude -I../ffmpeg_pkg/include /Fo:$(BUILDDIR)\ /c /EHsc /std:c++17 -O2
-LDFLAGS = /DLL wrapper/$(BUILDDIR)/*.obj $(BUILDDIR)/*.obj ../ffmpeg_pkg/lib/libavcodec.a ../ffmpeg_pkg/lib/libavdevice.a ../ffmpeg_pkg/lib/libavfilter.a ../ffmpeg_pkg/lib/libavformat.a ../ffmpeg_pkg/lib/libavutil.a ../ffmpeg_pkg/lib/libswresample.a ../ffmpeg_pkg/lib/libswscale.a ../ffmpeg_pkg/lib/libavformat.a
+LDFLAGS = /DLL wrapper/$(BUILDDIR)/*.obj $(BUILDDIR)/*.obj ../ffmpeg_pkg/lib/libavcodec.a ../ffmpeg_pkg/lib/libavfilter.a  ../ffmpeg_pkg/lib/libswscale.a ../ffmpeg_pkg/lib/libswresample.a ../ffmpeg_pkg/lib/libavutil.a
 TARGET = prores_encoder.dvcp
 OBJS = plugin.obj prores_encoder.obj
 

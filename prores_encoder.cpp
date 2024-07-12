@@ -12,11 +12,6 @@
 #include <fstream>
 #include <filesystem>
 
-#include "libavcodec/codec.h"
-#include "libavcodec/avcodec.h"
-#include "libavutil/frame.h"
-#include "libavutil/imgutils.h"
-
 #pragma comment(lib, "Dxva2.lib")
 #pragma comment(lib, "bcrypt.lib")
 #pragma comment(lib, "d3d9.lib")
@@ -223,8 +218,13 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	uint32_t vDirection = dirEncode;
 	codecInfo.SetProperty(pIOPropCodecDirection, propTypeUInt32, &vDirection, 1);
 
-	uint32_t vColorModel = clrUYVY;
+	uint32_t vColorModel = clrYUVp;
 	codecInfo.SetProperty(pIOPropColorModel, propTypeUInt32, &vColorModel, 1);
+
+	uint8_t hSampling = 2;
+	uint8_t vSampling = 2;
+	codecInfo.SetProperty(pIOPropHSubsampling, propTypeUInt8, &hSampling, 1);
+	codecInfo.SetProperty(pIOPropVSubsampling, propTypeUInt8, &vSampling, 1);
 
 	// Optionally enable both Data Ranges, Video will be default for "Auto" thus "0" value goes first
 	std::vector<uint8_t> dataRangeVec;
@@ -267,7 +267,9 @@ ProResEncoder::ProResEncoder()
 	, m_pPkt(NULL)
 	, m_pFrame(NULL)
 	, m_bFlushed(false)
+	, m_pSwsContext(NULL)
 {
+
 }
 
 ProResEncoder::~ProResEncoder()
@@ -278,9 +280,6 @@ ProResEncoder::~ProResEncoder()
 StatusCode ProResEncoder::DoInit(HostPropertyCollectionRef* p_pProps)
 {
 	g_Log(logLevelInfo, "ProRes Plugin :: DoInit ::");
-
-	uint32_t vColorModel = clrUYVY;
-	p_pProps->SetProperty(pIOPropColorModel, propTypeUInt32, &vColorModel, 1);
 
 	return errNone;
 }
@@ -294,7 +293,6 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 	{
 		logMessage << logMessagePrefix;
 		g_Log(logLevelInfo, logMessage.str().c_str());
-
 	}
 
 	m_CommonProps.Load(p_pBuff);
@@ -349,6 +347,7 @@ void ProResEncoder::SetupContext()
 		avcodec_free_context(&m_pContext);
 		av_frame_free(&m_pFrame);
 		av_packet_free(&m_pPkt);
+		sws_freeContext(m_pSwsContext);
 	}
 
 	const AVCodec* encoder = avcodec_find_encoder_by_name("prores_ks");
@@ -372,7 +371,7 @@ void ProResEncoder::SetupContext()
 	const struct AVRational timeBase = { 1, (int)m_CommonProps.GetFrameRateNum() };
 	const struct AVRational frameRate = { (int)m_CommonProps.GetFrameRateNum(), 1 };
 
-	m_pContext->pix_fmt = m_pSettings->GetProfile().PixelFormat;;
+	m_pContext->pix_fmt = m_pSettings->GetProfile().PixelFormat;
 	m_pContext->width = m_CommonProps.GetWidth();
 	m_pContext->height = m_CommonProps.GetHeight();
 	m_pContext->time_base = timeBase;
@@ -381,6 +380,15 @@ void ProResEncoder::SetupContext()
 	av_opt_set(m_pContext->priv_data, "profile", std::to_string(m_Profile).c_str(), 0);
 	av_opt_set(m_pContext->priv_data, "bits_per_mb", "8000", 0);
 	av_opt_set(m_pContext->priv_data, "vendor", "apl0", 0);
+
+	m_pSwsContext = sws_getContext(m_pContext->width, m_pContext->height, AV_PIX_FMT_YUV422P16LE, m_pContext->width, m_pContext->height, m_pSettings->GetProfile().PixelFormat, SWS_POINT, NULL, NULL, NULL);
+
+	{
+		logMessage.str("");
+		logMessage.clear();
+		logMessage << logMessagePrefix << "m_pSwsContext = " << m_pSwsContext;
+		g_Log(logLevelInfo, logMessage.str().c_str());
+	}
 
 	m_pPkt = av_packet_alloc();
 
@@ -489,38 +497,46 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 
 		uint32_t iPixelBytes = m_pSettings->GetBitDepth() > 8 ? 2 : 1;
 
-		// clrUYVY 16-bit 4:2:2 (interleaved) -> YUV422P10LE (planar)
+		// clrYUVp 16-bit 4:2:2 (16-bit) -> YUV422P10LE (10-bit)
 
-		int yPos = 0;
-		int uPos = 0;
-		int vPos = 0;
+		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: allocating IN FRAME");
 
-		for (int i = 0; i < bufSize; i += 8) {
+		AVFrame* pInFrame = av_frame_alloc();
+		pInFrame->format = AV_PIX_FMT_YUV422P16LE;
+		pInFrame->width = m_pContext->width;
+		pInFrame->height = m_pContext->height;
 
-			// U
-
-			m_pFrame->data[1][uPos++] = pSrc[0];
-			m_pFrame->data[1][uPos++] = pSrc[1];
-
-			// Y
-
-			m_pFrame->data[0][yPos++] = pSrc[2];
-			m_pFrame->data[0][yPos++] = pSrc[3];
-
-
-			// V
-
-			m_pFrame->data[2][vPos++] = pSrc[4];
-			m_pFrame->data[2][vPos++] = pSrc[5];
-
-			// Y
-
-			m_pFrame->data[0][yPos++] = pSrc[6];
-			m_pFrame->data[0][yPos++] = pSrc[7];
-
-			pSrc += 8;
-
+		if (av_frame_get_buffer(pInFrame, 0) < 0) {
+			g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: failed to allocate IN frame buffer");
+			return errAlloc;
 		}
+
+		if (av_frame_make_writable(pInFrame) < 0) {
+			g_Log(logLevelError, "ProRes Plugin :: DoProcess :: Failed to make IN frame writeable");
+			return errFail;
+		}
+
+		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: populating IN FRAME");
+
+		memcpy(pInFrame->data[0], pSrc, width * height * iPixelBytes);
+
+		pSrc += width * height * iPixelBytes;
+
+		memcpy(pInFrame->data[1], pSrc, (width * height * iPixelBytes) / 4);
+
+		pSrc += (width * height * iPixelBytes) / 4;
+
+		memcpy(pInFrame->data[2], pSrc, (width * height * iPixelBytes) / 4);
+
+		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: performing scaling");
+
+		if (sws_scale_frame(m_pSwsContext, m_pFrame, pInFrame) < 0) {
+			av_frame_free(&pInFrame);
+			g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: failed to convert IN to TRANSIENT");
+			return errFail;
+		}
+
+		av_frame_free(&pInFrame);
 
 		int64_t pts = -1;
 
@@ -530,6 +546,8 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 		}
 
 		m_pFrame->pts = pts;
+
+		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: sent frame to ENCODER");
 
 		encoderRet = avcodec_send_frame(m_pContext, m_pFrame);
 
