@@ -54,6 +54,7 @@ protected:
 
 private:
 	void SetupContext();
+	void CleanUp();
 	std::string ProResEncoder::ConvertUINT8ToHexStr(const uint8_t* v, const size_t s);
 
 private:

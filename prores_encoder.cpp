@@ -343,12 +343,7 @@ void ProResEncoder::SetupContext()
 		g_Log(logLevelInfo, logMessage.str().c_str());
 	}
 
-	if (m_pContext != NULL) {
-		avcodec_free_context(&m_pContext);
-		av_frame_free(&m_pFrame);
-		av_packet_free(&m_pPkt);
-		sws_freeContext(m_pSwsContext);
-	}
+	CleanUp();
 
 	const AVCodec* encoder = avcodec_find_encoder_by_name("prores_ks");
 
@@ -382,7 +377,6 @@ void ProResEncoder::SetupContext()
 	av_opt_set(m_pContext->priv_data, "vendor", "apl0", 0);
 
 	m_pSwsContext = sws_getContext(m_pContext->width, m_pContext->height, AV_PIX_FMT_YUV422P16LE, m_pContext->width, m_pContext->height, m_pSettings->GetProfile().PixelFormat, SWS_POINT, NULL, NULL, NULL);
-
 	{
 		logMessage.str("");
 		logMessage.clear();
@@ -391,7 +385,6 @@ void ProResEncoder::SetupContext()
 	}
 
 	m_pPkt = av_packet_alloc();
-
 	{
 		logMessage.str("");
 		logMessage.clear();
@@ -399,17 +392,7 @@ void ProResEncoder::SetupContext()
 		g_Log(logLevelInfo, logMessage.str().c_str());
 	}
 
-	int iRet = avcodec_open2(m_pContext, encoder, NULL);
-
-	{
-		logMessage.str("");
-		logMessage.clear();
-		logMessage << logMessagePrefix << "encoder opened";
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
-
-
-	if (iRet < 0) {
+	if (avcodec_open2(m_pContext, encoder, NULL) < 0) {
 		m_Error = errNoCodec;
 		return;
 	}
@@ -419,15 +402,13 @@ void ProResEncoder::SetupContext()
 	m_pFrame->width = m_pContext->width;
 	m_pFrame->height = m_pContext->height;
 
-	iRet = av_frame_get_buffer(m_pFrame, 0);
-
-	if (iRet < 0) {
-		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: failed to allocate frame get buffer");
+	if (av_frame_get_buffer(m_pFrame, 0) < 0) {
+		g_Log(logLevelError, "ProRes Plugin :: DoProcess :: failed to allocate frame buffer");
 		m_Error = errAlloc;
+		return;
 	}
 
 	m_bFlushed = false;
-
 	m_Error = errNone;
 
 }
@@ -437,11 +418,6 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 	int encoderRet = 0;
 	std::string logMessagePrefix = "ProRes Plugin :: DoProcess :: ";
 	std::ostringstream logMessage;
-
-	{
-		logMessage << logMessagePrefix;
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
 
 	if (m_Error != errNone) {
 		return m_Error;
@@ -499,8 +475,6 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 
 		// clrYUVp 16-bit 4:2:2 (16-bit) -> YUV422P10LE (10-bit)
 
-		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: allocating IN FRAME");
-
 		AVFrame* pInFrame = av_frame_alloc();
 		pInFrame->format = AV_PIX_FMT_YUV422P16LE;
 		pInFrame->width = m_pContext->width;
@@ -516,8 +490,6 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 			return errFail;
 		}
 
-		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: populating IN FRAME");
-
 		memcpy(pInFrame->data[0], pSrc, width * height * iPixelBytes);
 
 		pSrc += width * height * iPixelBytes;
@@ -528,11 +500,9 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 
 		memcpy(pInFrame->data[2], pSrc, (width * height * iPixelBytes) / 4);
 
-		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: performing scaling");
-
 		if (sws_scale_frame(m_pSwsContext, m_pFrame, pInFrame) < 0) {
 			av_frame_free(&pInFrame);
-			g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: failed to convert IN to TRANSIENT");
+			g_Log(logLevelError, "ProRes Plugin :: DoProcess :: failed to convert IN to TRANSIENT");
 			return errFail;
 		}
 
@@ -546,8 +516,6 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 		}
 
 		m_pFrame->pts = pts;
-
-		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: sent frame to ENCODER");
 
 		encoderRet = avcodec_send_frame(m_pContext, m_pFrame);
 
@@ -563,7 +531,6 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 		g_Log(logLevelInfo, logMessage.str().c_str());
 
 		return errFail;
-
 	}
 
 	encoderRet = avcodec_receive_packet(m_pContext, m_pPkt);
@@ -575,7 +542,9 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 
 	if (encoderRet == AVERROR_EOF) {
 		m_bFlushed = true;
-		g_Log(logLevelError, "ProRes Plugin :: DoProcess :: AVERROR_EOF");
+		av_packet_unref(m_pPkt);
+		CleanUp();
+		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: AVERROR_EOF");
 		return errNone;
 	}
 
@@ -615,8 +584,6 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 	uint8_t isKeyFrame = 1;
 	outBuf.SetProperty(pIOPropIsKeyFrame, propTypeUInt8, &isKeyFrame, 1);
 
-	av_packet_unref(m_pPkt);
-
 	return m_pCallback->SendOutput(&outBuf);
 
 }
@@ -633,6 +600,19 @@ void ProResEncoder::DoFlush()
 	StatusCode sts = DoProcess(NULL);
 	while (sts == errNone) {
 		sts = DoProcess(NULL);
+	}
+
+}
+
+void ProResEncoder::CleanUp() {
+
+	g_Log(logLevelInfo, "ProRes Plugin :: CleanUp");
+
+	if (m_pContext != NULL) {
+		avcodec_free_context(&m_pContext);
+		av_frame_free(&m_pFrame);
+		av_packet_free(&m_pPkt);
+		sws_freeContext(m_pSwsContext);
 	}
 
 }
