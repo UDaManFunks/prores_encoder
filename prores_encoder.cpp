@@ -238,9 +238,6 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	vBitDepth = 16;
 	codecInfo.SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
 
-	const uint32_t temp = 0;
-	codecInfo.SetProperty(pIOPropTemporalReordering, propTypeUInt32, &temp, 1);
-
 	const uint8_t fieldSupport = (fieldProgressive | fieldTop | fieldBottom);
 	codecInfo.SetProperty(pIOPropFieldOrder, propTypeUInt8, &fieldSupport, 1);
 
@@ -269,6 +266,7 @@ ProResEncoder::ProResEncoder()
 	, m_pContext(NULL)
 	, m_pPkt(NULL)
 	, m_pFrame(NULL)
+	, m_bFlushed(false)
 {
 }
 
@@ -315,18 +313,11 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 
 	p_pBuff->SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
 
-	uint8_t vBitDepth = m_pSettings->GetBitDepth();
+	uint8_t vBitDepth = 10;
 	p_pBuff->SetProperty(pIOPropBitDepth, propTypeUInt32, &vBitDepth, 1);
 
 	vBitDepth = 16;
 	p_pBuff->SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
-
-	{
-		logMessage.str("");
-		logMessage.clear();
-		logMessage << logMessagePrefix << "bitDepth = " << m_pSettings->GetBitDepth();
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
 
 	uint8_t isMultiPass = 0;
 	StatusCode sts = p_pBuff->SetProperty(pIOPropMultiPass, propTypeUInt8, &isMultiPass, 1);
@@ -339,9 +330,6 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 	if (m_Error != errNone) {
 		return m_Error;
 	}
-
-	uint32_t temporal = 2;
-	p_pBuff->SetProperty(pIOPropTemporalReordering, propTypeUInt32, &temporal, 1);
 
 	return errNone;
 }
@@ -359,8 +347,8 @@ void ProResEncoder::SetupContext()
 
 	if (m_pContext != NULL) {
 		avcodec_free_context(&m_pContext);
-		av_packet_free(&m_pPkt);
 		av_frame_free(&m_pFrame);
+		av_packet_free(&m_pPkt);
 	}
 
 	const AVCodec* encoder = avcodec_find_encoder_by_name("prores_ks");
@@ -396,23 +384,29 @@ void ProResEncoder::SetupContext()
 
 	m_pPkt = av_packet_alloc();
 
+	{
+		logMessage.str("");
+		logMessage.clear();
+		logMessage << logMessagePrefix << "allocated" << " :: m_pPkt = " << m_pPkt;
+		g_Log(logLevelInfo, logMessage.str().c_str());
+	}
+
 	int iRet = avcodec_open2(m_pContext, encoder, NULL);
+
+	{
+		logMessage.str("");
+		logMessage.clear();
+		logMessage << logMessagePrefix << "encoder opened";
+		g_Log(logLevelInfo, logMessage.str().c_str());
+	}
+
 
 	if (iRet < 0) {
 		m_Error = errNoCodec;
 		return;
 	}
 
-	{
-		logMessage.str("");
-		logMessage.clear();
-
-		logMessage << logMessagePrefix << "allocating frame";
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
-
 	m_pFrame = av_frame_alloc();
-
 	m_pFrame->format = m_pContext->pix_fmt;
 	m_pFrame->width = m_pContext->width;
 	m_pFrame->height = m_pContext->height;
@@ -420,17 +414,11 @@ void ProResEncoder::SetupContext()
 	iRet = av_frame_get_buffer(m_pFrame, 0);
 
 	if (iRet < 0) {
+		g_Log(logLevelInfo, "ProRes Plugin :: DoProcess :: failed to allocate frame get buffer");
 		m_Error = errAlloc;
-		return;
 	}
 
-	{
-		logMessage.str("");
-		logMessage.clear();
-
-		logMessage << logMessagePrefix << "frame allocated";
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
+	m_bFlushed = false;
 
 	m_Error = errNone;
 
@@ -438,21 +426,21 @@ void ProResEncoder::SetupContext()
 
 StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 {
+	int encoderRet = 0;
 	std::string logMessagePrefix = "ProRes Plugin :: DoProcess :: ";
 	std::ostringstream logMessage;
 
-	return errNone;
+	{
+		logMessage << logMessagePrefix;
+		g_Log(logLevelInfo, logMessage.str().c_str());
+	}
 
 	if (m_Error != errNone) {
 		return m_Error;
 	}
 
-	int bytes = 0;
-	int encoderRet = 0;
-	int64_t pts = -1;
-
-	if (av_frame_make_writable(m_pFrame) < 0) {
-		return errFail;
+	if (m_bFlushed) {
+		return errMoreData;
 	}
 
 	if (p_pBuff == NULL || !p_pBuff->IsValid()) {
@@ -461,11 +449,22 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 
 		encoderRet = avcodec_send_frame(m_pContext, NULL);
 
+		{
+			logMessage.str("");
+			logMessage.clear();
+			logMessage << logMessagePrefix << "after flushing" << " :: encoderRet = " << encoderRet;
+			g_Log(logLevelInfo, logMessage.str().c_str());
+		}
+
 	} else {
 
-		int64_t pts = -1;
 		char* pBuf = NULL;
 		size_t bufSize = 0;
+
+		if (av_frame_make_writable(m_pFrame) < 0) {
+			g_Log(logLevelError, "ProRes Plugin :: DoProcess :: Failed to make frame writeable");
+			return errFail;
+		}
 
 		if (!p_pBuff->LockBuffer(&pBuf, &bufSize)) {
 			g_Log(logLevelError, "ProRes Plugin :: Failed to lock the buffer");
@@ -486,40 +485,51 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 			return errNoParam;
 		}
 
+		uint8_t* pSrc = reinterpret_cast<uint8_t*>(const_cast<char*>(pBuf));
+
+		uint32_t iPixelBytes = m_pSettings->GetBitDepth() > 8 ? 2 : 1;
+
+		// clrUYVY 16-bit 4:2:2 (interleaved) -> YUV422P10LE (planar)
+
+		int yPos = 0;
+		int uPos = 0;
+		int vPos = 0;
+
+		for (int i = 0; i < bufSize; i += 8) {
+
+			// U
+
+			m_pFrame->data[1][uPos++] = pSrc[0];
+			m_pFrame->data[1][uPos++] = pSrc[1];
+
+			// Y
+
+			m_pFrame->data[0][yPos++] = pSrc[2];
+			m_pFrame->data[0][yPos++] = pSrc[3];
+
+
+			// V
+
+			m_pFrame->data[2][vPos++] = pSrc[4];
+			m_pFrame->data[2][vPos++] = pSrc[5];
+
+			// Y
+
+			m_pFrame->data[0][yPos++] = pSrc[6];
+			m_pFrame->data[0][yPos++] = pSrc[7];
+
+			pSrc += 8;
+
+		}
+
+		int64_t pts = -1;
+
 		if (!p_pBuff->GetINT64(pIOPropPTS, pts)) {
 			g_Log(logLevelError, "ProRes Plugin :: PTS not set when encoding the frame");
 			return errNoParam;
 		}
 
-		uint8_t* pSrc = reinterpret_cast<uint8_t*>(const_cast<char*>(pBuf));
-
-		uint32_t propBitsPerSample;
-		p_pBuff->GetUINT32(pIOPropBitsPerSample, propBitsPerSample);
-
-		uint32_t iPixelBytes = propBitsPerSample > 8 ? 2 : 1;
-
-		{
-			logMessage.str("");
-			logMessage.clear();
-			logMessage << logMessagePrefix << "bufSize = " << bufSize << " :: propBitsPerSample = " << propBitsPerSample << " :: iPixelBytes = " << iPixelBytes;
-			g_Log(logLevelInfo, logMessage.str().c_str());
-		}
-
-		// clrUYVY 16-bit 4:2:2 -> YUV422P10LE
-
-		int ySize = width * height * iPixelBytes;
-		int uAndVSize = bufSize - ySize;
-
-		uint8_t* uSrc = pSrc;
-		uSrc += ySize;
-
-		uint8_t* vSrc = uSrc;
-		vSrc += uAndVSize / 2;
-
 		m_pFrame->pts = pts;
-		memcpy(m_pFrame->data[0], pSrc, ySize); // Y
-		memcpy(m_pFrame->data[1], uSrc, uAndVSize / 2); // U
-		memcpy(m_pFrame->data[2], vSrc, uAndVSize / 2); // V
 
 		encoderRet = avcodec_send_frame(m_pContext, m_pFrame);
 
@@ -534,34 +544,31 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 		logMessage << logMessagePrefix << "frame submission failed";
 		g_Log(logLevelInfo, logMessage.str().c_str());
 
-		return errNone;
+		return errFail;
 
 	}
 
 	encoderRet = avcodec_receive_packet(m_pContext, m_pPkt);
 
-	{
-		logMessage.str("");
-		logMessage.clear();
-		logMessage << logMessagePrefix << "receive_packet" << " :: encoderRet = " << encoderRet;
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
-
-
-	if (encoderRet == AVERROR_EOF) {
-		return errNone;
-	}
-
 	if (encoderRet == AVERROR(EAGAIN)) {
+		g_Log(logLevelError, "ProRes Plugin :: DoProcess :: AVERROR(EAGAIN)");
 		return errMoreData;
 	}
 
+	if (encoderRet == AVERROR_EOF) {
+		m_bFlushed = true;
+		g_Log(logLevelError, "ProRes Plugin :: DoProcess :: AVERROR_EOF");
+		return errNone;
+	}
+
 	if (encoderRet < 0) {
+		g_Log(logLevelError, "ProRes Plugin :: DoProcess :: AVERROR");
 		return errFail;
 	}
 
 	HostBufferRef outBuf(false);
 	if (!outBuf.IsValid() || !outBuf.Resize(m_pPkt->size)) {
+		g_Log(logLevelError, "ProRes Plugin :: Could not resize output buffer");
 		return errAlloc;
 	}
 
@@ -569,30 +576,30 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 	size_t outBufSize = 0;
 
 	if (!outBuf.LockBuffer(&pOutBuf, &outBufSize)) {
+		g_Log(logLevelError, "ProRes Plugin :: Could not lock output buffer");
 		return errAlloc;
 	}
 
 	memcpy(pOutBuf, m_pPkt->data, m_pPkt->size);
 
-	int64_t ts = m_pPkt->pts;
-	outBuf.SetProperty(pIOPropPTS, propTypeInt64, &ts, 1);
+	av_packet_unref(m_pPkt);
 
-	uint8_t isKeyFrame = 0;
+	int64_t ePts = m_pPkt->pts;
+
+	outBuf.SetProperty(pIOPropPTS, propTypeInt64, &ePts, 1);
+
+	int64_t eDts = m_pPkt->pts + 1;
+
+	outBuf.SetProperty(pIOPropDTS, propTypeInt64, &eDts, 1);
+
+	// WHY? libavcodec is returning ts and dts at the same value which resolve does not like
+
+	uint8_t isKeyFrame = 1;
 	outBuf.SetProperty(pIOPropIsKeyFrame, propTypeUInt8, &isKeyFrame, 1);
-
-	StatusCode statusCode = m_pCallback->SendOutput(&outBuf);
 
 	av_packet_unref(m_pPkt);
 
-	{
-		logMessage.str("");
-		logMessage.clear();
-		logMessage << logMessagePrefix << "StatusCode = " << statusCode;
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
-
-
-	return statusCode;
+	return m_pCallback->SendOutput(&outBuf);
 
 }
 

@@ -60,10 +60,10 @@ private:
 	int m_ColorModel;
 	int32_t m_Profile;
 	StatusCode m_Error;
+	bool m_bFlushed;
 	std::unique_ptr<UISettingsController> m_pSettings;
 	HostCodecConfigCommon m_CommonProps;
 	AVCodecContext* m_pContext;
 	AVPacket* m_pPkt;
 	AVFrame* m_pFrame;
-
 };
