@@ -218,13 +218,15 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	uint32_t vDirection = dirEncode;
 	codecInfo.SetProperty(pIOPropCodecDirection, propTypeUInt32, &vDirection, 1);
 
-	uint32_t vColorModel = clrYUVp;
+	uint32_t vColorModel = clrRGB;
 	codecInfo.SetProperty(pIOPropColorModel, propTypeUInt32, &vColorModel, 1);
 
+	/*
 	uint8_t hSampling = 2;
-	uint8_t vSampling = 2;
+	uint8_t vSampling = 1;
 	codecInfo.SetProperty(pIOPropHSubsampling, propTypeUInt8, &hSampling, 1);
 	codecInfo.SetProperty(pIOPropVSubsampling, propTypeUInt8, &vSampling, 1);
+	*/
 
 	// Optionally enable both Data Ranges, Video will be default for "Auto" thus "0" value goes first
 	std::vector<uint8_t> dataRangeVec;
@@ -376,7 +378,7 @@ void ProResEncoder::SetupContext()
 	av_opt_set(m_pContext->priv_data, "bits_per_mb", "8000", 0);
 	av_opt_set(m_pContext->priv_data, "vendor", "apl0", 0);
 
-	m_pSwsContext = sws_getContext(m_pContext->width, m_pContext->height, AV_PIX_FMT_YUV422P16LE, m_pContext->width, m_pContext->height, m_pSettings->GetProfile().PixelFormat, SWS_POINT, NULL, NULL, NULL);
+	m_pSwsContext = sws_getContext(m_pContext->width, m_pContext->height, AV_PIX_FMT_RGB48LE, m_pContext->width, m_pContext->height, m_pSettings->GetProfile().PixelFormat, SWS_POINT, NULL, NULL, NULL);
 	{
 		logMessage.str("");
 		logMessage.clear();
@@ -469,14 +471,13 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 			return errNoParam;
 		}
 
-		uint8_t* pSrc = reinterpret_cast<uint8_t*>(const_cast<char*>(pBuf));
 
 		uint32_t iPixelBytes = m_pSettings->GetBitDepth() > 8 ? 2 : 1;
 
-		// clrYUVp 16-bit 4:2:2 (16-bit) -> YUV422P10LE (10-bit)
+		// clrRGB (16-bit) -> YUV422P10LE (10-bit)
 
 		AVFrame* pInFrame = av_frame_alloc();
-		pInFrame->format = AV_PIX_FMT_YUV422P16LE;
+		pInFrame->format = AV_PIX_FMT_RGB48LE;
 		pInFrame->width = m_pContext->width;
 		pInFrame->height = m_pContext->height;
 
@@ -490,15 +491,9 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 			return errFail;
 		}
 
-		memcpy(pInFrame->data[0], pSrc, width * height * iPixelBytes);
+		uint8_t* pSrc = reinterpret_cast<uint8_t*>(const_cast<char*>(pBuf));
 
-		pSrc += width * height * iPixelBytes;
-
-		memcpy(pInFrame->data[1], pSrc, (width * height * iPixelBytes) / 4);
-
-		pSrc += (width * height * iPixelBytes) / 4;
-
-		memcpy(pInFrame->data[2], pSrc, (width * height * iPixelBytes) / 4);
+		memcpy(pInFrame->data[0], pSrc, bufSize);
 
 		if (sws_scale_frame(m_pSwsContext, m_pFrame, pInFrame) < 0) {
 			av_frame_free(&pInFrame);
