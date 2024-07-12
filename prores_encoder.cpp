@@ -221,13 +221,6 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	uint32_t vColorModel = clrRGB;
 	codecInfo.SetProperty(pIOPropColorModel, propTypeUInt32, &vColorModel, 1);
 
-	/*
-	uint8_t hSampling = 2;
-	uint8_t vSampling = 1;
-	codecInfo.SetProperty(pIOPropHSubsampling, propTypeUInt8, &hSampling, 1);
-	codecInfo.SetProperty(pIOPropVSubsampling, propTypeUInt8, &vSampling, 1);
-	*/
-
 	// Optionally enable both Data Ranges, Video will be default for "Auto" thus "0" value goes first
 	std::vector<uint8_t> dataRangeVec;
 	dataRangeVec.push_back(0);
@@ -374,8 +367,16 @@ void ProResEncoder::SetupContext()
 	m_pContext->time_base = timeBase;
 	m_pContext->framerate = frameRate;
 
-	av_opt_set(m_pContext->priv_data, "profile", std::to_string(m_Profile).c_str(), 0);
-	av_opt_set(m_pContext->priv_data, "bits_per_mb", "8000", 0);
+	std::string encoderProfileVal = std::to_string(m_Profile);
+
+	{
+		logMessage.str("");
+		logMessage.clear();
+		logMessage << logMessagePrefix << "enoderProfileVal = " << encoderProfileVal;
+		g_Log(logLevelInfo, logMessage.str().c_str());
+	}
+
+	av_opt_set(m_pContext->priv_data, "profile", encoderProfileVal.c_str(), 0);
 	av_opt_set(m_pContext->priv_data, "vendor", "apl0", 0);
 
 	m_pSwsContext = sws_getContext(m_pContext->width, m_pContext->height, AV_PIX_FMT_RGB48LE, m_pContext->width, m_pContext->height, m_pSettings->GetProfile().PixelFormat, SWS_POINT, NULL, NULL, NULL);
@@ -519,7 +520,6 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 	}
 
 	if (encoderRet < 0) {
-
 		logMessage.str("");
 		logMessage.clear();
 		logMessage << logMessagePrefix << "frame submission failed";
