@@ -28,7 +28,7 @@
 #pragma comment(lib, "wmcodecdspuuid.lib")
 
 const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
-const ProfileMap ProResEncoder::s_ProfileMap[4] = { {'apco', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422 (Proxy)" }, {'apcs', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422 (LT)"}, {'apcn', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422"}, {'apch', AV_PIX_FMT_YUV422P10LE, "Apple ProRes 422 (HQ)"} };
+const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "Apple ProRes 422 (HQ)"} };
 
 class UISettingsController
 {
@@ -367,7 +367,7 @@ void ProResEncoder::SetupContext()
 	m_pContext->time_base = timeBase;
 	m_pContext->framerate = frameRate;
 
-	std::string encoderProfileVal = std::to_string(m_Profile);
+	std::string encoderProfileVal = m_pSettings->GetProfile().ProfileValue;
 
 	{
 		logMessage.str("");
