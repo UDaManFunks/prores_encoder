@@ -9,7 +9,7 @@
 
 const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
 const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
-std::counting_semaphore<10> g_MaxConcurrencyLimit(12);
+std::counting_semaphore<12> g_MaxConcurrencyLimit(12);
 
 class UISettingsController
 {
