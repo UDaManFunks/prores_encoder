@@ -34,7 +34,7 @@ Create Directory C:\VideoEditingUtils\prores_plugin_build
 5) cd /C/VideoEditingUtils/prores_plugin_build/ffmpeg
 6) CC=cl ./configure --toolchain=msvc  --pkg-config-flags=--static --disable-programs --disable-shared --enable-static --extra-ldflags=-static --enable-encoder=prores --prefix=/C/VideoEditingUtils/prores_plugin_build/ffmpeg_pkg
 7) make V=1 -j 8
-Ad
+   
 [Download prores_encoder]
 
 1) run "MSYS2 MSYS" - type it in the search bar in the Windows Task Bar
