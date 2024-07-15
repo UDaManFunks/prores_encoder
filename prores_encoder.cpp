@@ -1,15 +1,15 @@
 #include "prores_encoder.h"
 #include "prores_worker.h"
 
-#include <assert.h>
 #include <cstring>
 #include <vector>
+#include <assert.h>
 #include <stdint.h>
-
 #include <sstream>
 
 const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
 const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "Apple ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "Apple ProRes 422 (HQ)"} };
+std::counting_semaphore<10> g_MaxConcurrencyLimit(10);
 
 class UISettingsController
 {
@@ -77,6 +77,7 @@ public:
 	}
 
 private:
+
 	void InitDefaults()
 	{
 		m_Profile = 2;
@@ -305,9 +306,18 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 
 StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 {
+
+	// this should be limited to 10 concurrent requests running at the same time
+
+	g_MaxConcurrencyLimit.acquire();
+
 	ProResWorker worker(m_pSettings->GetProfile().ProfileValue, m_pSettings->GetProfile().PixelFormat, m_CommonProps.GetWidth(), m_CommonProps.GetHeight(), m_CommonProps.GetFrameRateNum(), m_pSettings->GetBitDepth());
 
-	return worker.EncodeFrame(p_pBuff, m_pCallback);
+	StatusCode returnCode = worker.EncodeFrame(p_pBuff, m_pCallback);
+
+	g_MaxConcurrencyLimit.release();
+
+	return returnCode;
 }
 
 void ProResEncoder::DoFlush()
@@ -320,8 +330,5 @@ void ProResEncoder::DoFlush()
 	}
 
 	StatusCode sts = DoProcess(NULL);
-	while (sts == errNone) {
-		sts = DoProcess(NULL);
-	}
 
 }

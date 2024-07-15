@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <semaphore>
 
 #include "wrapper/plugin_api.h"
 
