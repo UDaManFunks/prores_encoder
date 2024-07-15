@@ -9,7 +9,7 @@
 
 const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
 const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
-std::counting_semaphore<12> g_MaxConcurrencyLimit(12);
+std::counting_semaphore<10> g_MaxConcurrencyLimit(10);
 
 class UISettingsController
 {
@@ -253,21 +253,18 @@ ProResEncoder::~ProResEncoder()
 
 StatusCode ProResEncoder::DoInit(HostPropertyCollectionRef* p_pProps)
 {
-	g_Log(logLevelInfo, "ProRes Plugin :: DoInit");
+	char logMessagePrefix[] = "ProRes Plugin :: DoInit";
+
+	g_Log(logLevelInfo, logMessagePrefix);
 
 	return errNone;
 }
 
 StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 {
+	char logMessagePrefix[] = "ProRes Plugin :: DoOpen";
 
-	std::string logMessagePrefix = "ProRes Plugin :: DoOpen";
-	std::ostringstream logMessage;
-
-	{
-		logMessage << logMessagePrefix;
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
+	g_Log(logLevelInfo, logMessagePrefix);
 
 	m_CommonProps.Load(p_pBuff);
 
@@ -275,13 +272,6 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 	m_pSettings->Load(p_pBuff);
 
 	int32_t vFourCC = m_pSettings->GetProfile().FourCC;
-
-	{
-		logMessage.str("");
-		logMessage.clear();
-		logMessage << logMessagePrefix << " :: vFourCC = " << vFourCC;
-		g_Log(logLevelInfo, logMessage.str().c_str());
-	}
 
 	p_pBuff->SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
 
@@ -307,7 +297,7 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 {
 
-	// this should be limited to 12 concurrent requests running at the same time
+	// this should be limited to 10 concurrent requests running at the same time
 
 	g_MaxConcurrencyLimit.acquire();
 
