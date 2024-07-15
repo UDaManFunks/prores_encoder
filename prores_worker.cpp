@@ -1,10 +1,6 @@
 #include "prores_encoder.h"
 #include "prores_worker.h"
 
-#include <cstring>
-#include <vector>
-#include <stdint.h>
-
 #include <filesystem>
 
 #pragma comment(lib, "Dxva2.lib")
