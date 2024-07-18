@@ -1,10 +1,7 @@
 #include "prores_encoder.h"
 #include "prores_worker.h"
 
-#include <cstring>
-#include <vector>
 #include <assert.h>
-#include <stdint.h>
 #include <sstream>
 
 const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
@@ -186,10 +183,10 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	codecInfo.SetProperty(pIOPropUUID, propTypeUInt8, ProResEncoder::s_UUID, 16);
 
 	const char* pCodecName = "Auto";
-	codecInfo.SetProperty(pIOPropName, propTypeString, pCodecName, strlen(pCodecName));
+	codecInfo.SetProperty(pIOPropName, propTypeString, pCodecName, static_cast<int>(strlen(pCodecName)));
 
 	const char* pCodecGroup = "ProRes";
-	codecInfo.SetProperty(pIOPropGroup, propTypeString, pCodecGroup, strlen(pCodecGroup));
+	codecInfo.SetProperty(pIOPropGroup, propTypeString, pCodecGroup, static_cast<int>(strlen(pCodecGroup)));
 
 	uint32_t vFourCC = 'apcn';
 	codecInfo.SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
@@ -206,7 +203,7 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	std::vector<uint8_t> dataRangeVec;
 	dataRangeVec.push_back(0);
 	dataRangeVec.push_back(1);
-	codecInfo.SetProperty(pIOPropDataRange, propTypeUInt8, dataRangeVec.data(), dataRangeVec.size());
+	codecInfo.SetProperty(pIOPropDataRange, propTypeUInt8, dataRangeVec.data(), static_cast<int>(dataRangeVec.size()));
 
 	uint32_t vBitDepth = 10;
 	codecInfo.SetProperty(pIOPropBitDepth, propTypeUInt32, &vBitDepth, 1);
@@ -230,7 +227,7 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 		}
 	}
 
-	codecInfo.SetProperty(pIOPropContainerList, propTypeString, valStrings.c_str(), valStrings.size());
+	codecInfo.SetProperty(pIOPropContainerList, propTypeString, valStrings.c_str(), static_cast<int>(valStrings.size()));
 
 	if (!p_pList->Append(&codecInfo)) {
 		return errFail;

@@ -18,7 +18,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "wmcodecdspuuid.lib")
 
-ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, int iWidth, int iHeight, int iFrameRate, int iBitDepth)
+ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth)
 {
 
 	std::string logMessagePrefix = "ProResWorker :: Contructor";

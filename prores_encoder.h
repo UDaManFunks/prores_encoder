@@ -52,7 +52,7 @@ protected:
 private:
 	int m_ColorModel;
 	int32_t m_Profile;
-	StatusCode m_Error;
 	std::unique_ptr<UISettingsController> m_pSettings;
 	HostCodecConfigCommon m_CommonProps;
+	StatusCode m_Error;
 };

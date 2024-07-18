@@ -5,16 +5,13 @@ using namespace IOPlugin;
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavdevice/avdevice.h"
-#include "libavfilter/avfilter.h"
-#include "libavformat/avformat.h"
-#include "libavutil/avutil.h"
 #include "libswscale/swscale.h"
 }
 
 class ProResWorker
 {
 public:
-	ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, int iWidth, int iHeight, int iFrameRate, int iBitDepth);
+	ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth);
 	~ProResWorker();
 	StatusCode EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback);
 
