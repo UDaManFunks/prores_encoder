@@ -26,8 +26,8 @@ ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat,
 
 	m_sProfileValue = sProfileValue;
 	m_PixelFormat = pixelFormat;
-	m_iWidth = iWidth;
-	m_iHeight = iHeight;
+	m_Width = iWidth;
+	m_Height = iHeight;
 	m_iFrameRate = iFrameRate;
 	m_iBitDepth = iBitDepth;
 
@@ -69,13 +69,12 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 	const AVCodec* encoder = avcodec_find_encoder_by_name("prores_ks");
 	m_pContext = avcodec_alloc_context3(encoder);
 
-
 	const struct AVRational timeBase = { 1, m_iFrameRate };
 	const struct AVRational frameRate = { m_iFrameRate, 1 };
 
 	m_pContext->pix_fmt = m_PixelFormat;
-	m_pContext->width = m_iWidth;
-	m_pContext->height = m_iHeight;
+	m_pContext->width = m_Width;
+	m_pContext->height = m_Height;
 	m_pContext->time_base = timeBase;
 	m_pContext->framerate = frameRate;
 
@@ -84,7 +83,7 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 	av_opt_set(m_pContext->priv_data, "profile", encoderProfileVal.c_str(), 0);
 	av_opt_set(m_pContext->priv_data, "vendor", "apl0", 0);
 
-	m_pSwsContext = sws_getContext(m_iWidth, m_iHeight, AV_PIX_FMT_RGB48LE, m_iWidth, m_iHeight, m_PixelFormat, SWS_POINT, NULL, NULL, NULL);
+	m_pSwsContext = sws_getContext(m_Width, m_Height, AV_PIX_FMT_RGB48LE, m_Width, m_Height, m_PixelFormat, SWS_POINT, NULL, NULL, NULL);
 
 	m_pPkt = av_packet_alloc();
 
@@ -96,8 +95,8 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 
 	m_pInFrame = av_frame_alloc();
 	m_pInFrame->format = AV_PIX_FMT_RGB48LE;
-	m_pInFrame->width = m_iWidth;
-	m_pInFrame->height = m_iHeight;
+	m_pInFrame->width = m_Width;
+	m_pInFrame->height = m_Height;
 
 	if (av_frame_get_buffer(m_pInFrame, 0) < 0) {
 		g_Log(logLevelError, "ProResoneWorker :: SetupContext :: failed to allocate IN frame buffer");
@@ -107,8 +106,8 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 
 	m_pOutFrame = av_frame_alloc();
 	m_pOutFrame->format = m_PixelFormat;
-	m_pOutFrame->width = m_iWidth;
-	m_pOutFrame->height = m_iHeight;
+	m_pOutFrame->width = m_Width;
+	m_pOutFrame->height = m_Height;
 
 	if (av_frame_get_buffer(m_pOutFrame, 0) < 0) {
 		g_Log(logLevelError, "ProResWorker :: SetupContext :: failed to allocate OUT frame buffer");
@@ -152,7 +151,7 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 			}
 
 			if (!p_pBuff->LockBuffer(&pBuf, &bufSize)) {
-				g_Log(logLevelError, "%s%s", logMessagePrefix, " ::failed to lock the buffer");
+				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: failed to lock the buffer");
 				throw errFail;
 			}
 
@@ -189,7 +188,7 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 			int64_t pts = -1;
 
 			if (!p_pBuff->GetINT64(pIOPropPTS, pts)) {
-				g_Log(logLevelError, "%s%s", logMessagePrefix, " ::pts not set when encoding the frame");
+				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: pts not set when encoding the frame");
 				throw errNoParam;
 			}
 
@@ -261,7 +260,6 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 
 	}
 	catch (StatusCode errorCode) {
-
 
 		g_Log(logLevelError, "%s :: caught an exception :: errCode = %d", logMessagePrefix, errorCode);
 
