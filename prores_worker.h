@@ -25,8 +25,8 @@ private:
 
 	std::string m_sProfileValue;
 	AVPixelFormat m_PixelFormat;
-	int m_iWidth;
-	int m_iHeight;
+	uint32_t m_Width;
+	uint32_t m_Height;
 	int m_iFrameRate;
 	int m_iBitDepth;
 
