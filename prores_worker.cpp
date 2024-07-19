@@ -91,11 +91,11 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 	av_opt_set_int(m_pSwsContext, "dstw", m_Width, 0);
 	av_opt_set_int(m_pSwsContext, "dsth", m_Height, 0);
 	av_opt_set_int(m_pSwsContext, "src_range", m_IsFullRange, 0);
-	av_opt_set_int(m_pSwsContext, "src_format", AV_PIX_FMT_RGB48LE, 0);
+	av_opt_set_int(m_pSwsContext, "src_format", AV_PIX_FMT_AYUV64LE, 0);
 	av_opt_set_int(m_pSwsContext, "dst_range", m_IsFullRange, 0);
 	av_opt_set_int(m_pSwsContext, "dst_format", m_PixelFormat, 0);
 
-	if (sws_setColorspaceDetails(m_pSwsContext, sws_getCoefficients(AV_PIX_FMT_RGB48LE), m_IsFullRange, sws_getCoefficients(m_PixelFormat), m_IsFullRange, 0, 1 << 16, 1 << 16) < 0) {
+	if (sws_setColorspaceDetails(m_pSwsContext, sws_getCoefficients(AV_PIX_FMT_AYUV64LE), m_IsFullRange, sws_getCoefficients(m_PixelFormat), m_IsFullRange, 0, 1 << 16, 1 << 16) < 0) {
 		m_Error = errNoCodec;
 		return;
 	}
@@ -114,7 +114,7 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 	}
 
 	m_pInFrame = av_frame_alloc();
-	m_pInFrame->format = AV_PIX_FMT_RGB48LE;
+	m_pInFrame->format = AV_PIX_FMT_AYUV64LE;
 	m_pInFrame->width = m_Width;
 	m_pInFrame->height = m_Height;
 
@@ -153,7 +153,7 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 	try {
 
 		if (p_pBuff == NULL || !p_pBuff->IsValid()) {
-			g_Log(logLevelInfo, "%s%s", logMessagePrefix, " :: trying to flush");
+			g_Log(logLevelInfo, "%s :: trying to flush", logMessagePrefix);
 			encoderRet = avcodec_send_frame(m_pContext, NULL);
 		} else {
 
@@ -176,7 +176,7 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 			}
 
 			if (pBuf == NULL || bufSize == 0) {
-				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: EncodeFrame :: no data to encode");
+				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: no data to encode");
 				p_pBuff->UnlockBuffer();
 				throw errUnsupported;
 			}
@@ -189,11 +189,11 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 				throw errNoParam;
 			}
 
-			// COLORSPACE CONVERSION: clrRGB (16-bit) -> YUV422P10LE (10-bit)
+			// COLORSPACE CONVERSION: clrAYUV (16-bit) -> YUV422P10LE (10-bit)
 
 			uint8_t* pSrc = reinterpret_cast<uint8_t*>(const_cast<char*>(pBuf));
 
-			memcpy(m_pInFrame->data[0], pSrc, bufSize);
+			m_pInFrame->data[0] = pSrc;
 
 			if (sws_scale_frame(m_pSwsContext, m_pOutFrame, m_pInFrame) < 0) {
 				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: failed to PIXELFMT convert IN to OUT");
