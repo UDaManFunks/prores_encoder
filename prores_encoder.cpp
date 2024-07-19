@@ -137,9 +137,9 @@ public:
 		return ProResEncoder::s_ProfileMap[m_Profile];
 	}
 
-	int32_t GetBitDepth() const
+	int32_t GetBitsPerSample() const
 	{
-		return 10;
+		return 16;
 	}
 
 	const std::string& GetMarkerColor() const
@@ -205,10 +205,7 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	dataRangeVec.push_back(1);
 	codecInfo.SetProperty(pIOPropDataRange, propTypeUInt8, dataRangeVec.data(), static_cast<int>(dataRangeVec.size()));
 
-	uint32_t vBitDepth = 10;
-	codecInfo.SetProperty(pIOPropBitDepth, propTypeUInt32, &vBitDepth, 1);
-
-	vBitDepth = 16;
+	uint32_t vBitDepth = 16;
 	codecInfo.SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
 
 	const uint8_t fieldSupport = (fieldProgressive | fieldTop | fieldBottom);
@@ -272,10 +269,7 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 
 	p_pBuff->SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
 
-	uint8_t vBitDepth = m_pSettings->GetBitDepth();
-	p_pBuff->SetProperty(pIOPropBitDepth, propTypeUInt32, &vBitDepth, 1);
-
-	vBitDepth = 16;
+	uint8_t vBitDepth = m_pSettings->GetBitsPerSample();
 	p_pBuff->SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
 
 	uint8_t isMultiPass = 0;
@@ -288,14 +282,46 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 		return m_Error;
 	}
 
+	int16_t vColorMatrix = 0;
+	int16_t vColorPrimaries = 0;
+	int16_t vTransferFunction = 0;
+
+	{
+		PropertyType int16Type = propTypeInt16;
+		const void* pColorMatrix = static_cast<void*>(&vColorMatrix);
+		int iNumValues = 1;
+
+		p_pBuff->GetProperty(pIOColorMatrix, &int16Type, &pColorMatrix, &iNumValues);
+	}
+
+	{
+		PropertyType int16Type = propTypeInt16;
+		const void* pColorPrimaries = static_cast<void*>(&vColorPrimaries);
+		int iNumValues = 1;
+
+		p_pBuff->GetProperty(pIOPropColorPrimaries, &int16Type, &pColorPrimaries, &iNumValues);
+	}
+
+	{
+		PropertyType int16Type = propTypeInt16;
+		const void* pTransferFunction = static_cast<void*>(&vTransferFunction);
+		int iNumValues = 1;
+
+		p_pBuff->GetProperty(pIOTransferCharacteristics, &int16Type, &pTransferFunction, &iNumValues);
+	}
+
+	g_Log(logLevelInfo, "%s :: IsFullRange = %d, vColorMatrix = %d, vColorPrimaries = %d, vTransferFunction = %d", logMessagePrefix, m_CommonProps.IsFullRange(), vColorMatrix, vColorPrimaries, vTransferFunction);
+
 	return errNone;
 }
 
 StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 {
+	char logMessagePrefix[] = "ProResWorker :: DoProcess";
+
 	g_MaxConcurrencyLimit.acquire();
 
-	ProResWorker worker(m_pSettings->GetProfile().ProfileValue, m_pSettings->GetProfile().PixelFormat, m_CommonProps.GetWidth(), m_CommonProps.GetHeight(), m_CommonProps.GetFrameRateNum(), m_pSettings->GetBitDepth());
+	ProResWorker worker(m_pSettings->GetProfile().ProfileValue, m_pSettings->GetProfile().PixelFormat, m_CommonProps.GetWidth(), m_CommonProps.GetHeight(), m_CommonProps.GetFrameRateNum(), m_pSettings->GetBitsPerSample(), m_CommonProps.IsFullRange());
 
 	StatusCode returnCode = worker.EncodeFrame(p_pBuff, m_pCallback);
 

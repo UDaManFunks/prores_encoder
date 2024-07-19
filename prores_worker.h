@@ -11,7 +11,7 @@ extern "C" {
 class ProResWorker
 {
 public:
-	ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth);
+	ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth, bool IsFullRange);
 	~ProResWorker();
 	StatusCode EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback);
 
@@ -22,6 +22,7 @@ private:
 
 	std::string m_sProfileValue;
 	AVPixelFormat m_PixelFormat;
+	bool m_IsFullRange;
 	uint32_t m_Width;
 	uint32_t m_Height;
 	int m_iFrameRate;

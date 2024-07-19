@@ -18,11 +18,10 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "wmcodecdspuuid.lib")
 
-ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth)
+ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth, bool IsFullRange)
 {
 
 	std::string logMessagePrefix = "ProResWorker :: Contructor";
-	std::ostringstream logMessage;
 
 	m_sProfileValue = sProfileValue;
 	m_PixelFormat = pixelFormat;
@@ -30,6 +29,7 @@ ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat,
 	m_Height = iHeight;
 	m_iFrameRate = iFrameRate;
 	m_iBitDepth = iBitDepth;
+	m_IsFullRange = IsFullRange;
 
 	StatusCode m_Error = errNone;
 	AVCodecContext* m_pContext = NULL;
@@ -83,7 +83,27 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 	av_opt_set(m_pContext->priv_data, "profile", encoderProfileVal.c_str(), 0);
 	av_opt_set(m_pContext->priv_data, "vendor", "apl0", 0);
 
-	m_pSwsContext = sws_getContext(m_Width, m_Height, AV_PIX_FMT_RGB48LE, m_Width, m_Height, m_PixelFormat, SWS_POINT, NULL, NULL, NULL);
+	m_pSwsContext = sws_alloc_context();;
+
+	av_opt_set(m_pContext, "out_color_matrix", "bt709", 0);
+	av_opt_set_int(m_pSwsContext, "srcw", m_Width, 0);
+	av_opt_set_int(m_pSwsContext, "srch", m_Height, 0);
+	av_opt_set_int(m_pSwsContext, "dstw", m_Width, 0);
+	av_opt_set_int(m_pSwsContext, "dsth", m_Height, 0);
+	av_opt_set_int(m_pSwsContext, "src_range", m_IsFullRange, 0);
+	av_opt_set_int(m_pSwsContext, "src_format", AV_PIX_FMT_RGB48LE, 0);
+	av_opt_set_int(m_pSwsContext, "dst_range", m_IsFullRange, 0);
+	av_opt_set_int(m_pSwsContext, "dst_format", m_PixelFormat, 0);
+
+	if (sws_setColorspaceDetails(m_pSwsContext, sws_getCoefficients(AV_PIX_FMT_RGB48LE), m_IsFullRange, sws_getCoefficients(m_PixelFormat), m_IsFullRange, 0, 1 << 16, 1 << 16) < 0) {
+		m_Error = errNoCodec;
+		return;
+	}
+
+	if (sws_init_context(m_pSwsContext, nullptr, nullptr) < 0) {
+		m_Error = errNoCodec;
+		return;
+	}
 
 	m_pPkt = av_packet_alloc();
 
