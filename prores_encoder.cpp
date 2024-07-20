@@ -6,7 +6,7 @@
 
 const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
 const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
-std::counting_semaphore<32> g_MaxConcurrencyLimit(32);
+std::counting_semaphore<20> g_MaxConcurrencyLimit(20);
 
 class UISettingsController
 {
@@ -197,8 +197,16 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	uint32_t vDirection = dirEncode;
 	codecInfo.SetProperty(pIOPropCodecDirection, propTypeUInt32, &vDirection, 1);
 
+	// uint32_t vColorModel = clrYUVp;
 	uint32_t vColorModel = clrAYUV;
 	codecInfo.SetProperty(pIOPropColorModel, propTypeUInt32, &vColorModel, 1);
+
+	/*
+	uint8_t hSampling = 4;
+	uint8_t vSampling = 4;
+	codecInfo.SetProperty(pIOPropHSubsampling, propTypeUInt8, &hSampling, 1);
+	codecInfo.SetProperty(pIOPropVSubsampling, propTypeUInt8, &vSampling, 1);
+	*/
 
 	uint32_t vBitDepth = 16;
 	codecInfo.SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
@@ -234,8 +242,7 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 }
 
 ProResEncoder::ProResEncoder()
-	: m_ColorModel(-1)
-	, m_Error(errNone)
+	: m_Error(errNone)
 {
 
 }
@@ -250,6 +257,19 @@ StatusCode ProResEncoder::DoInit(HostPropertyCollectionRef* p_pProps)
 	char logMessagePrefix[] = "ProRes Plugin :: DoInit";
 
 	g_Log(logLevelInfo, "%s :: address of this = %I64x", logMessagePrefix, this);
+
+	int16_t vColorMatrix = 0;
+
+	{
+		PropertyType int16Type = propTypeInt16;
+		const void* pColorMatrix = static_cast<void*>(&vColorMatrix);
+		int iNumValues = 1;
+
+		p_pProps->GetProperty(pIOColorMatrix, &int16Type, &pColorMatrix, &iNumValues);
+	}
+
+
+	g_Log(logLevelInfo, "%s :: vColorMatrix = %d", logMessagePrefix, vColorMatrix);
 
 	return errNone;
 }

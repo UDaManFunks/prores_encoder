@@ -5,6 +5,7 @@ using namespace IOPlugin;
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavdevice/avdevice.h"
+#include "libavutil/imgutils.h"
 #include "libswscale/swscale.h"
 }
 
@@ -21,6 +22,7 @@ private:
 private:
 
 	std::string m_sProfileValue;
+	AVPixelFormat m_InPixelFormat;
 	AVPixelFormat m_PixelFormat;
 	bool m_IsFullRange;
 	uint32_t m_Width;

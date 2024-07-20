@@ -31,6 +31,9 @@ ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat,
 	m_iBitDepth = iBitDepth;
 	m_IsFullRange = IsFullRange;
 
+	// m_InPixelFormat = AV_PIX_FMT_YUV422P16LE;
+	m_InPixelFormat = AV_PIX_FMT_AYUV64LE;
+
 	StatusCode m_Error = errNone;
 	AVCodecContext* m_pContext = NULL;
 	AVPacket* m_pPkt = NULL;
@@ -91,11 +94,11 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 	av_opt_set_int(m_pSwsContext, "dstw", m_Width, 0);
 	av_opt_set_int(m_pSwsContext, "dsth", m_Height, 0);
 	av_opt_set_int(m_pSwsContext, "src_range", m_IsFullRange, 0);
-	av_opt_set_int(m_pSwsContext, "src_format", AV_PIX_FMT_AYUV64LE, 0);
+	av_opt_set_int(m_pSwsContext, "src_format", m_InPixelFormat, 0);
 	av_opt_set_int(m_pSwsContext, "dst_range", m_IsFullRange, 0);
 	av_opt_set_int(m_pSwsContext, "dst_format", m_PixelFormat, 0);
 
-	if (sws_setColorspaceDetails(m_pSwsContext, sws_getCoefficients(AV_PIX_FMT_AYUV64LE), m_IsFullRange, sws_getCoefficients(m_PixelFormat), m_IsFullRange, 0, 1 << 16, 1 << 16) < 0) {
+	if (sws_setColorspaceDetails(m_pSwsContext, sws_getCoefficients(m_InPixelFormat), m_IsFullRange, sws_getCoefficients(m_PixelFormat), m_IsFullRange, 0, 1 << 16, 1 << 16) < 0) {
 		m_Error = errNoCodec;
 		return;
 	}
@@ -114,7 +117,7 @@ void ProResWorker::SetupContext(HostBufferRef* p_pBuff)
 	}
 
 	m_pInFrame = av_frame_alloc();
-	m_pInFrame->format = AV_PIX_FMT_AYUV64LE;
+	m_pInFrame->format = m_InPixelFormat;
 	m_pInFrame->width = m_Width;
 	m_pInFrame->height = m_Height;
 
@@ -193,7 +196,12 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 
 			uint8_t* pSrc = reinterpret_cast<uint8_t*>(const_cast<char*>(pBuf));
 
-			m_pInFrame->data[0] = pSrc;
+			// m_pInFrame->data[0] = pSrc;
+
+			if (av_image_fill_arrays(m_pInFrame->data, m_pInFrame->linesize, pSrc, m_InPixelFormat, width, height, 1) < 0) {
+				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: failed to populate INFRAME");
+				throw errFail;
+			};
 
 			if (sws_scale_frame(m_pSwsContext, m_pOutFrame, m_pInFrame) < 0) {
 				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: failed to PIXELFMT convert IN to OUT");

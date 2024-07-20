@@ -50,7 +50,6 @@ protected:
 	virtual void DoFlush() override;
 
 private:
-	int m_ColorModel;
 	int32_t m_Profile;
 	std::unique_ptr<UISettingsController> m_pSettings;
 	HostCodecConfigCommon m_CommonProps;
