@@ -197,16 +197,21 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	uint32_t vDirection = dirEncode;
 	codecInfo.SetProperty(pIOPropCodecDirection, propTypeUInt32, &vDirection, 1);
 
+
+	/* clrAYUV == 4:4:4 */
+	/* clrYUVp == 4:2:2 */
+
 	// uint32_t vColorModel = clrYUVp;
 	uint32_t vColorModel = clrAYUV;
+
 	codecInfo.SetProperty(pIOPropColorModel, propTypeUInt32, &vColorModel, 1);
 
-	/*
-	uint8_t hSampling = 4;
-	uint8_t vSampling = 4;
-	codecInfo.SetProperty(pIOPropHSubsampling, propTypeUInt8, &hSampling, 1);
-	codecInfo.SetProperty(pIOPropVSubsampling, propTypeUInt8, &vSampling, 1);
-	*/
+	if (vColorModel == clrYUVp) {
+		uint8_t hSampling = 2;
+		uint8_t vSampling = 1;
+		codecInfo.SetProperty(pIOPropHSubsampling, propTypeUInt8, &hSampling, 1);
+		codecInfo.SetProperty(pIOPropVSubsampling, propTypeUInt8, &vSampling, 1);
+	}
 
 	uint32_t vBitDepth = 16;
 	codecInfo.SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
@@ -268,8 +273,11 @@ StatusCode ProResEncoder::DoInit(HostPropertyCollectionRef* p_pProps)
 		p_pProps->GetProperty(pIOColorMatrix, &int16Type, &pColorMatrix, &iNumValues);
 	}
 
-
 	g_Log(logLevelInfo, "%s :: vColorMatrix = %d", logMessagePrefix, vColorMatrix);
+
+	p_pProps->GetUINT32(pIOPropColorModel, m_ColorModel);
+
+	g_Log(logLevelInfo, "%s :: m_ColorModel = %d", logMessagePrefix, m_ColorModel);
 
 	return errNone;
 }
@@ -313,7 +321,7 @@ StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 
 	g_MaxConcurrencyLimit.acquire();
 
-	ProResWorker worker(m_pSettings->GetProfile().ProfileValue, m_pSettings->GetProfile().PixelFormat, m_CommonProps.GetWidth(), m_CommonProps.GetHeight(), m_CommonProps.GetFrameRateNum(), m_pSettings->GetBitsPerSample(), m_CommonProps.IsFullRange());
+	ProResWorker worker(m_ColorModel, m_pSettings->GetProfile().ProfileValue, m_pSettings->GetProfile().PixelFormat, m_CommonProps.GetWidth(), m_CommonProps.GetHeight(), m_CommonProps.GetFrameRateNum(), m_pSettings->GetBitsPerSample(), m_CommonProps.IsFullRange());
 
 	StatusCode returnCode = worker.EncodeFrame(p_pBuff, m_pCallback);
 

@@ -51,6 +51,7 @@ protected:
 
 private:
 	int32_t m_Profile;
+	uint32_t m_ColorModel;
 	std::unique_ptr<UISettingsController> m_pSettings;
 	HostCodecConfigCommon m_CommonProps;
 	StatusCode m_Error;

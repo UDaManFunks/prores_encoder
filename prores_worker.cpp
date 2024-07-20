@@ -18,7 +18,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "wmcodecdspuuid.lib")
 
-ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth, bool IsFullRange)
+ProResWorker::ProResWorker(uint32_t vColorModel, std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth, bool IsFullRange)
 {
 
 	std::string logMessagePrefix = "ProResWorker :: Contructor";
@@ -30,9 +30,13 @@ ProResWorker::ProResWorker(std::string sProfileValue, AVPixelFormat pixelFormat,
 	m_iFrameRate = iFrameRate;
 	m_iBitDepth = iBitDepth;
 	m_IsFullRange = IsFullRange;
+	m_ColorModel = vColorModel;
 
-	// m_InPixelFormat = AV_PIX_FMT_YUV422P16LE;
-	m_InPixelFormat = AV_PIX_FMT_AYUV64LE;
+	if (m_ColorModel == clrAYUV) {
+		m_InPixelFormat = AV_PIX_FMT_AYUV64LE;
+	} else {
+		m_InPixelFormat = AV_PIX_FMT_YUV422P16LE;
+	}
 
 	StatusCode m_Error = errNone;
 	AVCodecContext* m_pContext = NULL;
