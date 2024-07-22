@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
-#include <semaphore>
 
 #include "wrapper/plugin_api.h"
+#include "prores_worker.h"
 
 extern "C" {
 #include "libavutil/avutil.h"
@@ -52,7 +52,8 @@ protected:
 private:
 	int32_t m_Profile;
 	uint32_t m_ColorModel;
-	std::unique_ptr<UISettingsController> m_pSettings;
 	HostCodecConfigCommon m_CommonProps;
 	StatusCode m_Error;
+	std::unique_ptr<UISettingsController> m_pSettings = std::make_unique<UISettingsController>();
+	std::unique_ptr<ProResWorker> m_pWorker = std::make_unique<ProResWorker>();
 };

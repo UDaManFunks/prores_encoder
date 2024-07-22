@@ -2,6 +2,8 @@
 
 using namespace IOPlugin;
 
+#include <memory>
+
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavdevice/avdevice.h"
@@ -12,24 +14,23 @@ extern "C" {
 class ProResWorker
 {
 public:
-	ProResWorker(uint32_t vColorModel, std::string sProfileValue, AVPixelFormat pixelFormat, uint32_t iWidth, uint32_t iHeight, int iFrameRate, int iBitDepth, bool IsFullRange);
+	ProResWorker();
 	~ProResWorker();
+	void Init(uint32_t ColorModel, std::string ProfileValue, HostCodecConfigCommon CommonProps, AVPixelFormat PixelFormat, int32_t BitPerSample);
 	StatusCode EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback);
 
-private:
-	void SetupContext(HostBufferRef* p_pBuff);
-	std::string ConvertUINT8ToHexStr(const uint8_t* v, const size_t s);
 private:
 
 	std::string m_sProfileValue;
 	AVPixelFormat m_InPixelFormat;
 	AVPixelFormat m_PixelFormat;
 	bool m_IsFullRange;
+	bool m_IsInitialized;
 	uint32_t m_Width;
 	uint32_t m_Height;
 	uint32_t m_ColorModel;
 	int m_iFrameRate;
-	int m_iBitDepth;
+	int32_t m_iBitDepth;
 
 	StatusCode m_Error;
 	AVCodecContext* m_pContext;
@@ -37,4 +38,5 @@ private:
 	AVFrame* m_pOutFrame;
 	SwsContext* m_pSwsContext;
 	AVPacket* m_pPkt;
+	const AVCodec* m_Encoder;
 };
