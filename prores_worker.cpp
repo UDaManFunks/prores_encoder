@@ -20,12 +20,11 @@
 
 ProResWorker::ProResWorker(uint32_t ColorModel, std::string ProfileValue, HostCodecConfigCommon CommonProps, AVPixelFormat PixelFormat, int32_t BitsPerSample)
 {
-	m_pContext = NULL;
-	m_pPkt = NULL;
-	m_pOutFrame = NULL;
-	m_pInFrame = NULL;
-	m_pSwsContext = NULL;
-	m_Encoder = NULL;
+	m_pContext = nullptr;
+	m_pPkt = nullptr;
+	m_pOutFrame = nullptr;
+	m_pInFrame = nullptr;
+	m_pSwsContext = nullptr;
 	m_Error = errNone;
 
 	char logMessagePrefix[] = "ProResWorker :: ()";
@@ -47,12 +46,12 @@ ProResWorker::ProResWorker(uint32_t ColorModel, std::string ProfileValue, HostCo
 		m_InPixelFormat = AV_PIX_FMT_YUV422P16LE;
 	}
 
-	m_Encoder = avcodec_find_encoder_by_name("prores_ks");
+	const AVCodec* m_pEncoder = avcodec_find_encoder_by_name("prores_ks");
 
-	m_pContext = avcodec_alloc_context3(m_Encoder);
+	m_pContext = avcodec_alloc_context3(m_pEncoder);
 
-	const struct AVRational timeBase = { 1, m_iFrameRate };
-	const struct AVRational frameRate = { m_iFrameRate, 1 };
+	const struct AVRational timeBase = { 1, (int)m_iFrameRate };
+	const struct AVRational frameRate = { (int)m_iFrameRate, 1 };
 
 	m_pContext->pix_fmt = m_PixelFormat;
 	m_pContext->width = m_Width;
@@ -85,7 +84,7 @@ ProResWorker::ProResWorker(uint32_t ColorModel, std::string ProfileValue, HostCo
 		return;
 	}
 
-	if (avcodec_open2(m_pContext, m_Encoder, NULL) < 0) {
+	if (avcodec_open2(m_pContext, m_pEncoder, NULL) < 0) {
 		g_Log(logLevelError, "ProResWorker :: SetupContext :: failed to open encoder context");
 		m_Error = errNoCodec;
 		return;
@@ -113,27 +112,31 @@ ProResWorker::ProResWorker(uint32_t ColorModel, std::string ProfileValue, HostCo
 
 ProResWorker::~ProResWorker()
 {
-	if (m_pOutFrame != NULL) {
+	if (m_pOutFrame != nullptr) {
 		av_frame_free(&m_pOutFrame);
+		m_pOutFrame = nullptr;
 	}
 
-	if (m_pInFrame != NULL) {
+	if (m_pInFrame != nullptr) {
 		av_frame_free(&m_pInFrame);
+		m_pInFrame = nullptr;
 	}
 
-	if (m_pPkt != NULL) {
+	if (m_pPkt != nullptr) {
 		av_packet_free(&m_pPkt);
+		m_pPkt = nullptr;
 	}
 
-	if (m_pSwsContext != NULL) {
+	if (m_pSwsContext != nullptr) {
 		sws_freeContext(m_pSwsContext);
+		m_pSwsContext = nullptr;
 	}
 
-	if (m_pContext != NULL) {
+	if (m_pContext != nullptr) {
 		avcodec_free_context(&m_pContext);
+		m_pContext = nullptr;
 	}
 
-	m_Encoder = NULL;
 }
 
 

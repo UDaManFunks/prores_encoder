@@ -34,5 +34,4 @@ private:
 	AVFrame* m_pOutFrame;
 	SwsContext* m_pSwsContext;
 	AVPacket* m_pPkt;
-	const AVCodec* m_Encoder;
 };
