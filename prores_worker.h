@@ -23,7 +23,7 @@ private:
 	uint32_t m_Width;
 	uint32_t m_Height;
 	uint32_t m_ColorModel;
-	int m_iFrameRate;
+	uint32_t m_iFrameRate;
 	int32_t m_iBitDepth;
 	std::string m_sProfileValue;
 	StatusCode m_Error;
