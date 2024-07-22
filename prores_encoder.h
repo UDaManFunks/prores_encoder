@@ -54,6 +54,6 @@ private:
 	uint32_t m_ColorModel;
 	HostCodecConfigCommon m_CommonProps;
 	StatusCode m_Error;
-	std::unique_ptr<UISettingsController> m_pSettings = std::make_unique<UISettingsController>();
-	std::unique_ptr<ProResWorker> m_pWorker = std::make_unique<ProResWorker>();
+	std::unique_ptr<UISettingsController> m_pSettings;
+	std::unique_ptr<ProResWorker> m_pWorker;
 };

@@ -296,7 +296,7 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 		return m_Error;
 	}
 
-	m_pWorker->Init(m_ColorModel, m_pSettings->GetProfile().ProfileValue, m_CommonProps, m_pSettings->GetProfile().PixelFormat, m_pSettings->GetBitsPerSample());
+	m_pWorker.reset(new ProResWorker(m_ColorModel, m_pSettings->GetProfile().ProfileValue, m_CommonProps, m_pSettings->GetProfile().PixelFormat, m_pSettings->GetBitsPerSample()));
 
 	return errNone;
 }

@@ -18,7 +18,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "wmcodecdspuuid.lib")
 
-ProResWorker::ProResWorker()
+ProResWorker::ProResWorker(uint32_t ColorModel, std::string ProfileValue, HostCodecConfigCommon CommonProps, AVPixelFormat PixelFormat, int32_t BitsPerSample)
 {
 	m_pContext = NULL;
 	m_pPkt = NULL;
@@ -26,8 +26,89 @@ ProResWorker::ProResWorker()
 	m_pInFrame = NULL;
 	m_pSwsContext = NULL;
 	m_Encoder = NULL;
-	m_IsInitialized = false;
 	m_Error = errNone;
+
+	char logMessagePrefix[] = "ProResWorker :: ()";
+
+	g_Log(logLevelInfo, "%s :: address of this = %I64x", logMessagePrefix, this);
+
+	m_ColorModel = ColorModel;
+	m_sProfileValue = ProfileValue;
+	m_Width = CommonProps.GetWidth();
+	m_Height = CommonProps.GetHeight();
+	m_iFrameRate = CommonProps.GetFrameRateNum();
+	m_IsFullRange = CommonProps.IsFullRange();
+	m_PixelFormat = PixelFormat;
+	m_iBitDepth = BitsPerSample;
+
+	if (m_ColorModel == clrAYUV) {
+		m_InPixelFormat = AV_PIX_FMT_AYUV64LE;
+	} else {
+		m_InPixelFormat = AV_PIX_FMT_YUV422P16LE;
+	}
+
+	m_Encoder = avcodec_find_encoder_by_name("prores_ks");
+
+	m_pContext = avcodec_alloc_context3(m_Encoder);
+
+	const struct AVRational timeBase = { 1, m_iFrameRate };
+	const struct AVRational frameRate = { m_iFrameRate, 1 };
+
+	m_pContext->pix_fmt = m_PixelFormat;
+	m_pContext->width = m_Width;
+	m_pContext->height = m_Height;
+	m_pContext->time_base = timeBase;
+	m_pContext->framerate = frameRate;
+
+	av_opt_set(m_pContext->priv_data, "profile", m_sProfileValue.c_str(), 0);
+	av_opt_set(m_pContext->priv_data, "vendor", "apl0", 0);
+
+	m_pSwsContext = sws_alloc_context();
+
+	av_opt_set(m_pContext, "out_color_matrix", "bt709", 0);
+	av_opt_set_int(m_pSwsContext, "srcw", m_Width, 0);
+	av_opt_set_int(m_pSwsContext, "srch", m_Height, 0);
+	av_opt_set_int(m_pSwsContext, "dstw", m_Width, 0);
+	av_opt_set_int(m_pSwsContext, "dsth", m_Height, 0);
+	av_opt_set_int(m_pSwsContext, "src_range", m_IsFullRange, 0);
+	av_opt_set_int(m_pSwsContext, "src_format", m_InPixelFormat, 0);
+	av_opt_set_int(m_pSwsContext, "dst_range", m_IsFullRange, 0);
+	av_opt_set_int(m_pSwsContext, "dst_format", m_PixelFormat, 0);
+
+	if (sws_setColorspaceDetails(m_pSwsContext, sws_getCoefficients(m_InPixelFormat), m_IsFullRange, sws_getCoefficients(m_PixelFormat), m_IsFullRange, 0, 1 << 16, 1 << 16) < 0) {
+		m_Error = errNoCodec;
+		return;
+	}
+
+	if (sws_init_context(m_pSwsContext, nullptr, nullptr) < 0) {
+		m_Error = errNoCodec;
+		return;
+	}
+
+	if (avcodec_open2(m_pContext, m_Encoder, NULL) < 0) {
+		g_Log(logLevelError, "ProResWorker :: SetupContext :: failed to open encoder context");
+		m_Error = errNoCodec;
+		return;
+	}
+
+	m_pPkt = av_packet_alloc();
+
+	m_pInFrame = av_frame_alloc();
+	m_pInFrame->format = m_InPixelFormat;
+	m_pInFrame->width = m_Width;
+	m_pInFrame->height = m_Height;
+
+	m_pOutFrame = av_frame_alloc();
+	m_pOutFrame->format = m_PixelFormat;
+	m_pOutFrame->width = m_Width;
+	m_pOutFrame->height = m_Height;
+
+	if (av_frame_get_buffer(m_pOutFrame, 0) < 0) {
+		g_Log(logLevelError, "ProResWorker :: SetupContext :: failed to allocate OUT frame buffer");
+		m_Error = errAlloc;
+		return;
+	}
+
 }
 
 ProResWorker::~ProResWorker()
@@ -55,114 +136,12 @@ ProResWorker::~ProResWorker()
 	m_Encoder = NULL;
 }
 
-void ProResWorker::Init(uint32_t ColorModel, std::string ProfileValue, HostCodecConfigCommon CommonProps, AVPixelFormat PixelFormat, int32_t BitsPerSample)
-{
-	char logMessagePrefix[] = "ProResWorker :: Init";
-
-	if (!m_IsInitialized) {
-
-		g_Log(logLevelInfo, "%s :: address of this = %I64x", logMessagePrefix, this);
-
-		m_ColorModel = ColorModel;
-		m_sProfileValue = ProfileValue;
-		m_Width = CommonProps.GetWidth();
-		m_Height = CommonProps.GetHeight();
-		m_iFrameRate = CommonProps.GetFrameRateNum();
-		m_IsFullRange = CommonProps.IsFullRange();
-		m_PixelFormat = PixelFormat;
-		m_iBitDepth = BitsPerSample;
-
-		if (m_ColorModel == clrAYUV) {
-			m_InPixelFormat = AV_PIX_FMT_AYUV64LE;
-		} else {
-			m_InPixelFormat = AV_PIX_FMT_YUV422P16LE;
-		}
-
-		m_Encoder = avcodec_find_encoder_by_name("prores_ks");
-
-		m_pContext = avcodec_alloc_context3(m_Encoder);
-
-		const struct AVRational timeBase = { 1, m_iFrameRate };
-		const struct AVRational frameRate = { m_iFrameRate, 1 };
-
-		m_pContext->pix_fmt = m_PixelFormat;
-		m_pContext->width = m_Width;
-		m_pContext->height = m_Height;
-		m_pContext->time_base = timeBase;
-		m_pContext->framerate = frameRate;
-
-		av_opt_set(m_pContext->priv_data, "profile", m_sProfileValue.c_str(), 0);
-		av_opt_set(m_pContext->priv_data, "vendor", "apl0", 0);
-
-		m_pSwsContext = sws_alloc_context();
-
-		av_opt_set(m_pContext, "out_color_matrix", "bt709", 0);
-		av_opt_set_int(m_pSwsContext, "srcw", m_Width, 0);
-		av_opt_set_int(m_pSwsContext, "srch", m_Height, 0);
-		av_opt_set_int(m_pSwsContext, "dstw", m_Width, 0);
-		av_opt_set_int(m_pSwsContext, "dsth", m_Height, 0);
-		av_opt_set_int(m_pSwsContext, "src_range", m_IsFullRange, 0);
-		av_opt_set_int(m_pSwsContext, "src_format", m_InPixelFormat, 0);
-		av_opt_set_int(m_pSwsContext, "dst_range", m_IsFullRange, 0);
-		av_opt_set_int(m_pSwsContext, "dst_format", m_PixelFormat, 0);
-
-		if (sws_setColorspaceDetails(m_pSwsContext, sws_getCoefficients(m_InPixelFormat), m_IsFullRange, sws_getCoefficients(m_PixelFormat), m_IsFullRange, 0, 1 << 16, 1 << 16) < 0) {
-			m_Error = errNoCodec;
-			return;
-		}
-
-		if (sws_init_context(m_pSwsContext, nullptr, nullptr) < 0) {
-			m_Error = errNoCodec;
-			return;
-		}
-
-		if (avcodec_open2(m_pContext, m_Encoder, NULL) < 0) {
-			g_Log(logLevelError, "ProResWorker :: SetupContext :: failed to open encoder context");
-			m_Error = errNoCodec;
-			return;
-		}
-
-		m_pPkt = av_packet_alloc();
-
-		m_pInFrame = av_frame_alloc();
-		m_pInFrame->format = m_InPixelFormat;
-		m_pInFrame->width = m_Width;
-		m_pInFrame->height = m_Height;
-
-		/*
-
-		if (av_frame_get_buffer(m_pInFrame, 0) < 0) {
-			g_Log(logLevelError, "ProResoneWorker :: SetupContext :: failed to allocate IN frame buffer");
-			m_Error = errAlloc;
-			return;
-		}
-
-		*/
-
-		m_pOutFrame = av_frame_alloc();
-		m_pOutFrame->format = m_PixelFormat;
-		m_pOutFrame->width = m_Width;
-		m_pOutFrame->height = m_Height;
-
-		if (av_frame_get_buffer(m_pOutFrame, 0) < 0) {
-			g_Log(logLevelError, "ProResWorker :: SetupContext :: failed to allocate OUT frame buffer");
-			m_Error = errAlloc;
-			return;
-		}
-
-		m_IsInitialized = true;
-
-	}
-
-}
 
 StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback)
 {
 	char logMessagePrefix[] = "ProResWorker :: EncodeFrame";
 	int encoderRet = 0;
 	int64_t pts = -1;
-
-	// g_Log(logLevelInfo, "%s :: address of this = %I64x", logMessagePrefix, this);
 
 	if (m_Error != errNone) {
 		return m_Error;
@@ -177,13 +156,6 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 
 			char* pBuf = NULL;
 			size_t bufSize = 0;
-
-			/*
-			if (av_frame_make_writable(m_pInFrame) < 0) {
-				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: failed to make IN frame writeable");
-				throw errFail;
-			}
-			*/
 
 			if (av_frame_make_writable(m_pOutFrame) < 0) {
 				g_Log(logLevelError, "%s%s", logMessagePrefix, " :: failed to make OUT frame writeable");

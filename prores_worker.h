@@ -14,25 +14,21 @@ extern "C" {
 class ProResWorker
 {
 public:
-	ProResWorker();
+	ProResWorker(uint32_t ColorModel, std::string ProfileValue, HostCodecConfigCommon CommonProps, AVPixelFormat PixelFormat, int32_t BitPerSample);
 	~ProResWorker();
-	void Init(uint32_t ColorModel, std::string ProfileValue, HostCodecConfigCommon CommonProps, AVPixelFormat PixelFormat, int32_t BitPerSample);
 	StatusCode EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback);
 
 private:
-
-	std::string m_sProfileValue;
-	AVPixelFormat m_InPixelFormat;
-	AVPixelFormat m_PixelFormat;
 	bool m_IsFullRange;
-	bool m_IsInitialized;
 	uint32_t m_Width;
 	uint32_t m_Height;
 	uint32_t m_ColorModel;
 	int m_iFrameRate;
 	int32_t m_iBitDepth;
-
+	std::string m_sProfileValue;
 	StatusCode m_Error;
+	AVPixelFormat m_InPixelFormat;
+	AVPixelFormat m_PixelFormat;
 	AVCodecContext* m_pContext;
 	AVFrame* m_pInFrame;
 	AVFrame* m_pOutFrame;
