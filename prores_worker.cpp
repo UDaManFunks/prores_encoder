@@ -1,4 +1,3 @@
-#include "prores_encoder.h"
 #include "prores_worker.h"
 
 #include <filesystem>
@@ -18,7 +17,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "wmcodecdspuuid.lib")
 
-ProResWorker::ProResWorker(uint32_t ColorModel, std::string ProfileValue, HostCodecConfigCommon CommonProps, AVPixelFormat PixelFormat, int32_t BitsPerSample)
+ProResWorker::ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonProps, UISettingsController* pSettings)
 {
 	m_pContext = nullptr;
 	m_pPkt = nullptr;
@@ -32,13 +31,13 @@ ProResWorker::ProResWorker(uint32_t ColorModel, std::string ProfileValue, HostCo
 	g_Log(logLevelInfo, "%s :: address of this = %I64x", logMessagePrefix, this);
 
 	m_ColorModel = ColorModel;
-	m_sProfileValue = ProfileValue;
-	m_Width = CommonProps.GetWidth();
-	m_Height = CommonProps.GetHeight();
-	m_iFrameRate = CommonProps.GetFrameRateNum();
-	m_IsFullRange = CommonProps.IsFullRange();
-	m_PixelFormat = PixelFormat;
-	m_iBitDepth = BitsPerSample;
+	m_Width = pCommonProps->GetWidth();
+	m_Height = pCommonProps->GetHeight();
+	m_iFrameRate = pCommonProps->GetFrameRateNum();
+	m_IsFullRange = pCommonProps->IsFullRange();
+	m_iBitDepth = pSettings->GetBitsPerSample();
+	m_PixelFormat = pSettings->GetProfile().PixelFormat;
+	m_sProfileValue = pSettings->GetProfile().ProfileValue;
 
 	if (m_ColorModel == clrAYUV) {
 		m_InPixelFormat = AV_PIX_FMT_AYUV64LE;
@@ -138,7 +137,6 @@ ProResWorker::~ProResWorker()
 	}
 
 }
-
 
 StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback)
 {

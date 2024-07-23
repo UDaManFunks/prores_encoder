@@ -1,3 +1,4 @@
+#include "uisettings_controller.h"
 #include "prores_encoder.h"
 
 #include <assert.h>
@@ -5,151 +6,6 @@
 
 const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
 const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
-
-class UISettingsController
-{
-public:
-	UISettingsController()
-	{
-		InitDefaults();
-	}
-
-	explicit UISettingsController(const HostCodecConfigCommon& p_CommonProps)
-		: m_CommonProps(p_CommonProps)
-	{
-		InitDefaults();
-	}
-
-	~UISettingsController()
-	{
-	}
-
-	void Load(IPropertyProvider* p_pValues)
-	{
-		uint8_t val8 = 0;
-		p_pValues->GetUINT8("prores_reset", val8);
-		if (val8 != 0) {
-			*this = UISettingsController();
-			return;
-		}
-
-		p_pValues->GetINT32("prores_profile", m_Profile);
-		p_pValues->GetString("prores_enc_markers", m_MarkerColor);
-	}
-
-	StatusCode Render(HostListRef* p_pSettingsList)
-	{
-		StatusCode err = RenderGeneral(p_pSettingsList);
-		if (err != errNone) {
-			return err;
-		}
-
-		{
-			HostUIConfigEntryRef item("prores_separator");
-			item.MakeSeparator();
-			if (!item.IsSuccess() || !p_pSettingsList->Append(&item)) {
-				g_Log(logLevelError, "ProRes Plugin :: Failed to add a separator entry");
-				return errFail;
-			}
-		}
-
-		err = RenderQuality(p_pSettingsList);
-		if (err != errNone) {
-			return err;
-		}
-
-		{
-			HostUIConfigEntryRef item("prores_reset");
-			item.MakeButton("Reset");
-			item.SetTriggersUpdate(true);
-			if (!item.IsSuccess() || !p_pSettingsList->Append(&item)) {
-				g_Log(logLevelError, "ProRes Plugin :: Failed to populate the button entry");
-				return errFail;
-			}
-		}
-
-		return errNone;
-	}
-
-private:
-
-	void InitDefaults()
-	{
-		m_Profile = 2;
-	}
-
-	StatusCode RenderGeneral(HostListRef* p_pSettingsList)
-	{
-		if (0) {
-			HostUIConfigEntryRef item("prores_lbl_general");
-			item.MakeLabel("General Settings");
-
-			if (!item.IsSuccess() || !p_pSettingsList->Append(&item)) {
-				g_Log(logLevelError, "ProRes Plugin :: Failed to populate general label entry");
-				return errFail;
-			}
-		}
-
-		// Markers selection
-		if (m_CommonProps.GetContainer().size() >= 32) {
-			HostUIConfigEntryRef item("prores_enc_markers");
-			item.MakeMarkerColorSelector("Chapter Marker", "Marker 1", m_MarkerColor);
-			if (!item.IsSuccess() || !p_pSettingsList->Append(&item)) {
-				g_Log(logLevelError, "ProRes Plugin :: Failed to populate encoder preset UI entry");
-				assert(false);
-				return errFail;
-			}
-		}
-
-		// Profile combobox
-		{
-			HostUIConfigEntryRef item("prores_profile");
-
-			std::vector<std::string> textsVec;
-			std::vector<int> valuesVec;
-
-			for (int i = 0; i < 4; i++) {
-				valuesVec.push_back(i);
-				textsVec.push_back(ProResEncoder::s_ProfileMap[i].ProfileName);
-			}
-
-			item.MakeComboBox("Encoder Profile", textsVec, valuesVec, m_Profile);
-			if (!item.IsSuccess() || !p_pSettingsList->Append(&item)) {
-				g_Log(logLevelError, "ProRes Plugin :: Failed to populate profile UI entry");
-				return errFail;
-			}
-		}
-
-		return errNone;
-	}
-
-	StatusCode RenderQuality(HostListRef* p_pSettingsList)
-	{
-
-		return errNone;
-	}
-
-public:
-	const ProfileMap GetProfile() const
-	{
-		return ProResEncoder::s_ProfileMap[m_Profile];
-	}
-
-	int32_t GetBitsPerSample() const
-	{
-		return 16;
-	}
-
-	const std::string& GetMarkerColor() const
-	{
-		return m_MarkerColor;
-	}
-
-private:
-	HostCodecConfigCommon m_CommonProps;
-	std::string m_MarkerColor;
-	int32_t m_Profile;
-};
 
 StatusCode ProResEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
 {
@@ -258,18 +114,6 @@ ProResEncoder::~ProResEncoder()
 
 StatusCode ProResEncoder::DoInit(HostPropertyCollectionRef* p_pProps)
 {
-	int16_t vColorMatrix = 0;
-
-	{
-		PropertyType int16Type = propTypeInt16;
-		const void* pColorMatrix = static_cast<void*>(&vColorMatrix);
-		int iNumValues = 1;
-
-		p_pProps->GetProperty(pIOColorMatrix, &int16Type, &pColorMatrix, &iNumValues);
-	}
-
-	p_pProps->GetUINT32(pIOPropColorModel, m_ColorModel);
-
 	return errNone;
 }
 
@@ -280,11 +124,21 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 	m_pSettings.reset(new UISettingsController(m_CommonProps));
 	m_pSettings->Load(p_pBuff);
 
+	p_pBuff->GetUINT32(pIOPropColorModel, m_ColorModel);
+
 	int32_t vFourCC = m_pSettings->GetProfile().FourCC;
 	p_pBuff->SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
 
 	uint8_t vBitDepth = m_pSettings->GetBitsPerSample();
 	p_pBuff->SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
+
+	int16_t vColorMatrix = 1;
+	int16_t vColorPrimaries = 1;
+	int16_t vTransferFunction = 1;
+
+	p_pBuff->SetProperty(pIOColorMatrix, propTypeInt16, &vColorMatrix, 1);
+	p_pBuff->SetProperty(pIOPropColorPrimaries, propTypeInt16, &vColorPrimaries, 1);
+	p_pBuff->SetProperty(pIOTransferCharacteristics, propTypeInt16, &vTransferFunction, 1);
 
 	uint8_t isMultiPass = 0;
 	StatusCode sts = p_pBuff->SetProperty(pIOPropMultiPass, propTypeUInt8, &isMultiPass, 1);
@@ -296,24 +150,14 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 		return m_Error;
 	}
 
-	m_pWorker.reset(new ProResWorker(m_ColorModel, m_pSettings->GetProfile().ProfileValue, m_CommonProps, m_pSettings->GetProfile().PixelFormat, m_pSettings->GetBitsPerSample()));
+	m_pWorker.reset(new ProResWorker(m_ColorModel, &m_CommonProps, m_pSettings.get()));
 
 	return errNone;
 }
 
 StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
 {
-	StatusCode returnCode = m_pWorker->EncodeFrame(p_pBuff, m_pCallback);
-
-	int16_t vColorMatrix = 1;
-	int16_t vColorPrimaries = 1;
-	int16_t vTransferFunction = 1;
-
-	p_pBuff->SetProperty(pIOColorMatrix, propTypeInt16, &vColorMatrix, 1);
-	p_pBuff->SetProperty(pIOPropColorPrimaries, propTypeInt16, &vColorPrimaries, 1);
-	p_pBuff->SetProperty(pIOTransferCharacteristics, propTypeInt16, &vTransferFunction, 1);
-
-	return returnCode;
+	return m_pWorker->EncodeFrame(p_pBuff, m_pCallback);
 }
 
 void ProResEncoder::DoFlush()

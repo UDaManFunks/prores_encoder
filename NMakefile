@@ -2,10 +2,10 @@ BINDIR = bin
 CC = cl
 SUBDIRS = wrapper
 BUILDDIR = build
-CFLAGS = -Iinclude -I../ffmpeg_pkg/include /Fo:$(BUILDDIR)\ /c /EHsc /std:c++20 /W3 /O2
+CFLAGS = -Iinclude -I../ffmpeg_pkg/include /Fo:$(BUILDDIR)/ /c /EHsc /std:c++20 /W3 /O2
 LDFLAGS = /DLL wrapper/$(BUILDDIR)/*.obj $(BUILDDIR)/*.obj ../ffmpeg_pkg/lib/libavcodec.a ../ffmpeg_pkg/lib/libavfilter.a  ../ffmpeg_pkg/lib/libswscale.a ../ffmpeg_pkg/lib/libswresample.a ../ffmpeg_pkg/lib/libavutil.a
 TARGET = prores_encoder.dvcp
-OBJS = plugin.obj prores_worker.obj prores_encoder.obj
+OBJS = plugin.obj uisettings_controller.obj prores_worker.obj prores_encoder.obj
 
 all: prereq make-subdirs $(OBJS) $(TARGET)
 
