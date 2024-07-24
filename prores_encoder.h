@@ -9,7 +9,7 @@ using namespace IOPlugin;
 
 namespace IOPlugin {
 
-	class ProResEncoder : public IPluginCodecRef
+	class ProResEncoder final : public IPluginCodecRef
 	{
 	public:
 		static const uint8_t s_UUID[];

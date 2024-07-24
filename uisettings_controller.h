@@ -7,7 +7,7 @@
 
 namespace IOPlugin {
 
-	class UISettingsController
+	class UISettingsController final
 	{
 	public:
 		UISettingsController();
@@ -22,9 +22,9 @@ namespace IOPlugin {
 		StatusCode RenderQuality(HostListRef* p_pSettingsList);
 
 	public:
-		virtual ProfileMap GetProfile();
-		virtual int32_t GetBitsPerSample();
-		virtual std::string& GetMarkerColor();
+		ProfileMap GetProfile() const;
+		int32_t GetBitsPerSample() const;
+		const std::string& GetMarkerColor() const;
 
 	private:
 		HostCodecConfigCommon m_CommonProps;

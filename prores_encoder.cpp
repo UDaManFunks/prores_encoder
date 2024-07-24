@@ -53,12 +53,12 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 
 
 	/* clrAYUV == 4:4:4 */
-	/* clrYUVp == 4:2:2 */
-
-	// uint32_t vColorModel = clrYUVp;
 	uint32_t vColorModel = clrAYUV;
 
 	codecInfo.SetProperty(pIOPropColorModel, propTypeUInt32, &vColorModel, 1);
+
+	/* clrYUVp == 4:2 : 2 */
+	// uint32_t vColorModel = clrYUVp;
 
 	if (vColorModel == clrYUVp) {
 		uint8_t hSampling = 2;

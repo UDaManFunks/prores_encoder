@@ -16,7 +16,7 @@ using namespace IOPlugin;
 
 namespace IOPlugin {
 
-	class ProResWorker
+	class ProResWorker final
 	{
 	public:
 		ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonProps, UISettingsController* pSettings);

@@ -122,17 +122,17 @@ StatusCode UISettingsController::RenderQuality(HostListRef* p_pSettingsList)
 	return errNone;
 }
 
-ProfileMap UISettingsController::GetProfile()
+ProfileMap UISettingsController::GetProfile() const
 {
 	return ProResEncoder::s_ProfileMap[m_Profile];
 }
 
-int32_t UISettingsController::GetBitsPerSample()
+int32_t UISettingsController::GetBitsPerSample() const
 {
 	return 16;
 }
 
-std::string& UISettingsController::GetMarkerColor()
+const std::string& UISettingsController::GetMarkerColor() const
 {
 	return m_MarkerColor;
 }
