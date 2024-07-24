@@ -51,6 +51,8 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	uint32_t vDirection = dirEncode;
 	codecInfo.SetProperty(pIOPropCodecDirection, propTypeUInt32, &vDirection, 1);
 
+	uint8_t vHWAcc = 1;
+	codecInfo.SetProperty(pIOPropHWAcc, propTypeUInt8, &vHWAcc, 1);
 
 	/* clrAYUV == 4:4:4 */
 	uint32_t vColorModel = clrAYUV;
