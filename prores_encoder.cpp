@@ -21,12 +21,10 @@ StatusCode ProResEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pVal
 StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 {
 
-	std::string logMessagePrefix = "ProRes Plugin :: s_RegisterCodecs";
-	std::ostringstream logMessage;
+	const char* logMessagePrefix = "ProRes Plugin :: s_RegisterCodecs";
 
 	{
-		logMessage << logMessagePrefix;
-		g_Log(logLevelInfo, logMessage.str().c_str());
+		g_Log(logLevelInfo, "%s", logMessagePrefix);
 	}
 
 	HostPropertyCollectionRef codecInfo;
@@ -79,7 +77,6 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 
 	const uint8_t fieldSupport = (fieldProgressive | fieldTop | fieldBottom);
 	codecInfo.SetProperty(pIOPropFieldOrder, propTypeUInt8, &fieldSupport, 1);
-
 
 	uint8_t vThreadSafe = 1;
 	codecInfo.SetProperty(pIOPropThreadSafe, propTypeUInt8, &vThreadSafe, 1);

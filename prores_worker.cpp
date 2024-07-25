@@ -26,7 +26,7 @@ ProResWorker::ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonPr
 	m_pSwsContext = nullptr;
 	m_Error = errNone;
 
-	char logMessagePrefix[] = "ProResWorker :: ()";
+	const char* logMessagePrefix = "ProResWorker :: ()";
 
 	g_Log(logLevelInfo, "%s :: address of this = %I64x", logMessagePrefix, this);
 
@@ -140,7 +140,7 @@ ProResWorker::~ProResWorker()
 
 StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback)
 {
-	char logMessagePrefix[] = "ProResWorker :: EncodeFrame";
+	const char* logMessagePrefix = "ProResWorker :: EncodeFrame";
 	int encoderRet = 0;
 	int64_t pts = -1;
 
