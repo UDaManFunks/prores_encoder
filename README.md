@@ -44,7 +44,7 @@ Create Directory C:\VideoEditingUtils\prores_plugin_build
 [Compile prores_encoder]
 
 1) run the "x64 Native Tools Command Prompt for VS 2022" - type it in the seach bar in the Windows Task Bar
-2) Inside the command prompt, type "cd /d C:\VideoEditingUtils\x265_plugin_build\prores_encoder"
+2) Inside the command prompt, type "cd /d C:\VideoEditingUtils\prores_plugin_build\prores_encoder"
 3) nmake /f NMakefile
    
 [Packaging / Installing]
