@@ -256,11 +256,9 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 		av_packet_unref(m_pPkt);
 
 		int64_t ePts = m_pPkt->pts;
-
 		outBuf.SetProperty(pIOPropPTS, propTypeInt64, &ePts, 1);
 
 		int64_t eDts = m_pPkt->pts + 1;
-
 		outBuf.SetProperty(pIOPropDTS, propTypeInt64, &eDts, 1);
 
 		uint8_t isKeyFrame = 1;
