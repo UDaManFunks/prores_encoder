@@ -135,7 +135,6 @@ ProResWorker::~ProResWorker()
 		avcodec_free_context(&m_pContext);
 		m_pContext = nullptr;
 	}
-
 }
 
 StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback)
@@ -271,7 +270,6 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 
 	}
 	catch (StatusCode errorCode) {
-
 		g_Log(logLevelError, "%s :: caught an exception :: errCode = %d", logMessagePrefix, errorCode);
 
 		m_Error = errorCode;
