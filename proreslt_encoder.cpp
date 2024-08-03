@@ -105,7 +105,7 @@ StatusCode ProResLTEncoder::s_RegisterCodecs(HostListRef* p_pList)
 
 ProResLTEncoder::ProResLTEncoder()
 {
-
+	m_ProfileMap = s_ProfileMap[0];
 }
 
 ProResLTEncoder::~ProResLTEncoder()

@@ -1,14 +1,14 @@
 #include "uisettings_controller.h"
-#include "prorespx_encoder.h"
+#include "prores422_encoder.h"
 
 #include <assert.h>
 #include <sstream>
 
-const uint8_t ProResPXEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb8 };
+const uint8_t ProRes422Encoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
 
-const ProfileMap ProResPXEncoder::s_ProfileMap[1] = { {"0", 'apco', 16, AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"} };
+const ProfileMap ProRes422Encoder::s_ProfileMap[1] = { {"2",'apcn', 16, AV_PIX_FMT_YUV422P10LE , "ProRes 422"} };
 
-StatusCode ProResPXEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
+StatusCode ProRes422Encoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
 {
 	HostCodecConfigCommon commonProps;
 	commonProps.Load(p_pValues);
@@ -19,10 +19,10 @@ StatusCode ProResPXEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pV
 	return settings.Render(p_pSettingsList);
 }
 
-StatusCode ProResPXEncoder::s_RegisterCodecs(HostListRef* p_pList)
+StatusCode ProRes422Encoder::s_RegisterCodecs(HostListRef* p_pList)
 {
 
-	const char* logMessagePrefix = "ProResPX Plugin :: s_RegisterCodecs";
+	const char* logMessagePrefix = "ProResHQ Plugin :: s_RegisterCodecs";
 
 	{
 		g_Log(logLevelInfo, "%s", logMessagePrefix);
@@ -33,7 +33,7 @@ StatusCode ProResPXEncoder::s_RegisterCodecs(HostListRef* p_pList)
 		return errAlloc;
 	}
 
-	codecInfo.SetProperty(pIOPropUUID, propTypeUInt8, ProResPXEncoder::s_UUID, 16);
+	codecInfo.SetProperty(pIOPropUUID, propTypeUInt8, ProRes422Encoder::s_UUID, 16);
 
 	const char* pCodecName = "Auto";
 	codecInfo.SetProperty(pIOPropName, propTypeString, pCodecName, static_cast<int>(strlen(pCodecName)));
@@ -44,7 +44,7 @@ StatusCode ProResPXEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	uint32_t vFourCC = s_ProfileMap[0].FourCC;
 	codecInfo.SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
 
-	g_Log(logLevelInfo, "ProResPX Plugin :: s_RegisterCodecs :: fourCC = %d", vFourCC);
+	g_Log(logLevelInfo, "ProRes422 Plugin :: s_RegisterCodecs :: fourCC = %d", vFourCC);
 
 	uint32_t vMediaVideo = mediaVideo;
 	codecInfo.SetProperty(pIOPropMediaType, propTypeUInt32, &vMediaVideo, 1);
@@ -103,12 +103,13 @@ StatusCode ProResPXEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	return errNone;
 }
 
-ProResPXEncoder::ProResPXEncoder()
+ProRes422Encoder::ProRes422Encoder()
 {
 	m_ProfileMap = s_ProfileMap[0];
 }
 
-ProResPXEncoder::~ProResPXEncoder()
+ProRes422Encoder::~ProRes422Encoder()
 {
 
 }
+

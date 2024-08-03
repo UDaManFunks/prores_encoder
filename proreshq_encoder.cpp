@@ -105,7 +105,7 @@ StatusCode ProResHQEncoder::s_RegisterCodecs(HostListRef* p_pList)
 
 ProResHQEncoder::ProResHQEncoder()
 {
-
+	m_ProfileMap = s_ProfileMap[0];
 }
 
 ProResHQEncoder::~ProResHQEncoder()

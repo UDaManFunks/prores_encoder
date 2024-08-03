@@ -12,16 +12,6 @@ namespace IOPlugin {
 	class ProResEncoder : public IPluginCodecRef
 	{
 	public:
-		static const uint8_t s_UUID[];
-		static const ProfileMap s_ProfileMap[1];
-
-	public:
-		ProResEncoder();
-		~ProResEncoder();
-
-		static StatusCode s_RegisterCodecs(HostListRef* p_pList);
-		static StatusCode s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList);
-
 		virtual bool IsNeedNextPass() override
 		{
 			return false;
@@ -33,10 +23,17 @@ namespace IOPlugin {
 		}
 
 	protected:
+		ProResEncoder();
+		~ProResEncoder();
+
+	protected:
 		virtual StatusCode DoInit(HostPropertyCollectionRef* p_pProps) override;
 		virtual StatusCode DoOpen(HostBufferRef* p_pBuff) override;
 		virtual StatusCode DoProcess(HostBufferRef* p_pBuff) override;
 		virtual void DoFlush() override;
+
+	protected:
+		ProfileMap m_ProfileMap;
 
 	private:
 		uint32_t m_ColorModel;
