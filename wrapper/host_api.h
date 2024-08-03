@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef PRORES_WRAPPER_HOST_API_H_
+#define PRORES_WRAPPER_HOST_API_H_
+
 #include <string.h>
 #include <stdint.h>
 #include "IOPluginDefs.h"
@@ -322,3 +325,5 @@ namespace IOPlugin
         std::map<double, HostMarkerInfo> m_MarkersMap;
     };
 }
+
+#endif // PRORES_WRAPPER_HOST_API_H_

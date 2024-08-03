@@ -1,10 +1,12 @@
 #pragma once
 
+#ifndef PRORES_WRAPPER_PLUGIN_API_H_
+#define PRORES_WRAPPER_PLUGIN_API_H_
+
 #include <stdarg.h>
+#include <atomic>
 
 #include "host_api.h"
-
-#include <atomic>
 
 #if defined _WIN64 || defined __CYGWIN__
     #ifdef __GNUC__
@@ -160,3 +162,4 @@ namespace IOPlugin
     };
 };
 
+#endif // PRORES_WRAPPER_PLUGIN_API_H_
