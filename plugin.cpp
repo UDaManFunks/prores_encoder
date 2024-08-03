@@ -2,6 +2,8 @@
 #include "uisettings_controller.h"
 #include "prores_encoder.h"
 #include "proreshq_encoder.h"
+#include "proreslt_encoder.h"
+#include "prorespx_encoder.h"
 
 #include <assert.h>
 #include <cstring>
@@ -32,6 +34,15 @@ StatusCode g_HandleCreateObj(unsigned char* p_pUUID, ObjectRef* p_ppObj)
 		return errNone;
 	}
 
+	if (memcmp(p_pUUID, ProResLTEncoder::s_UUID, 16) == 0) {
+		*p_ppObj = new ProResLTEncoder();
+		return errNone;
+	}
+
+	if (memcmp(p_pUUID, ProResPXEncoder::s_UUID, 16) == 0) {
+		*p_ppObj = new ProResPXEncoder();
+		return errNone;
+	}
 
 	return errUnsupported;
 }
@@ -59,6 +70,15 @@ StatusCode g_ListCodecs(HostListRef* p_pList)
 		return err;
 	}
 
+	err = ProResLTEncoder::s_RegisterCodecs(p_pList);
+	if (err != errNone) {
+		return err;
+	}
+
+	err = ProResPXEncoder::s_RegisterCodecs(p_pList);
+	if (err != errNone) {
+		return err;
+	}
 
 	return errNone;
 }
@@ -77,6 +97,14 @@ StatusCode g_GetEncoderSettings(unsigned char* p_pUUID, HostPropertyCollectionRe
 
 	if (memcmp(p_pUUID, ProResHQEncoder::s_UUID, 16) == 0) {
 		return ProResHQEncoder::s_GetEncoderSettings(p_pValues, p_pSettingsList);
+	}
+
+	if (memcmp(p_pUUID, ProResLTEncoder::s_UUID, 16) == 0) {
+		return ProResLTEncoder::s_GetEncoderSettings(p_pValues, p_pSettingsList);
+	}
+
+	if (memcmp(p_pUUID, ProResPXEncoder::s_UUID, 16) == 0) {
+		return ProResPXEncoder::s_GetEncoderSettings(p_pValues, p_pSettingsList);
 	}
 
 	return errNoCodec;

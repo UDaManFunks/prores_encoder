@@ -6,10 +6,6 @@
 
 const uint8_t ProResHQEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb6 };
 
-// const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
-
-/* Cannot support multiple profiles with this CODEC as it each one has different FOURCC codes */
-
 const ProfileMap ProResHQEncoder::s_ProfileMap[1] = { {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
 
 StatusCode ProResHQEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
@@ -42,7 +38,7 @@ StatusCode ProResHQEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	const char* pCodecName = "Auto";
 	codecInfo.SetProperty(pIOPropName, propTypeString, pCodecName, static_cast<int>(strlen(pCodecName)));
 
-	const char* pCodecGroup = "ProRes 422 (HQ)";
+	const char* pCodecGroup = s_ProfileMap[0].ProfileName.c_str();
 	codecInfo.SetProperty(pIOPropGroup, propTypeString, pCodecGroup, static_cast<int>(strlen(pCodecGroup)));
 
 	uint32_t vFourCC = s_ProfileMap[0].FourCC;
