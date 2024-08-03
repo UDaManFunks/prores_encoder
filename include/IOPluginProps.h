@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef PRORES_INCLUDE_IOPLUGIN_PROPS_H_
+#define PRORES_INCLUDE_IOPLUGIN_PROPS_H_
+
 namespace IOPlugin
 {
     typedef const char* PropertyID;
@@ -174,3 +177,5 @@ namespace IOPlugin
 
     static PropertyID pIOPropMarkersBlob = "markersBlob"; // uint8_t array containing markers data
 }
+
+#endif // PRORES_INCLUDE_IOPLUGIN_PROPS_H_
