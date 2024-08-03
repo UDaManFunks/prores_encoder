@@ -9,7 +9,7 @@ using namespace IOPlugin;
 
 namespace IOPlugin {
 
-	class ProResEncoder final : public IPluginCodecRef
+	class ProResEncoder : public IPluginCodecRef
 	{
 	public:
 		static const uint8_t s_UUID[];
@@ -38,7 +38,7 @@ namespace IOPlugin {
 		virtual StatusCode DoProcess(HostBufferRef* p_pBuff) override;
 		virtual void DoFlush() override;
 
-	private:
+	protected:
 		int32_t m_Profile;
 		uint32_t m_ColorModel;
 		HostCodecConfigCommon m_CommonProps;

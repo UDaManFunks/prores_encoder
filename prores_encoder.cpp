@@ -56,10 +56,10 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	codecInfo.SetProperty(pIOPropHWAcc, propTypeUInt8, &vHWAcc, 1);
 
 	/* clrAYUV == 4:4:4 */
-	uint32_t vColorModel = clrAYUV;
+	// uint32_t vColorModel = clrAYUV;
 
 	/* clrYUVp == 4:2:2 */
-	// uint32_t vColorModel = clrYUVp;
+	uint32_t vColorModel = clrYUVp;
 
 	codecInfo.SetProperty(pIOPropColorModel, propTypeUInt32, &vColorModel, 1);
 
@@ -104,9 +104,8 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 }
 
 ProResEncoder::ProResEncoder()
-	: m_Error(errNone)
 {
-
+	m_Error = errNone;
 }
 
 ProResEncoder::~ProResEncoder()
