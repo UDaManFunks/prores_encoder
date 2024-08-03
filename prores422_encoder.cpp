@@ -22,7 +22,7 @@ StatusCode ProRes422Encoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_p
 StatusCode ProRes422Encoder::s_RegisterCodecs(HostListRef* p_pList)
 {
 
-	const char* logMessagePrefix = "ProResHQ Plugin :: s_RegisterCodecs";
+	const char* logMessagePrefix = "ProRes422 Plugin :: s_RegisterCodecs";
 
 	{
 		g_Log(logLevelInfo, "%s", logMessagePrefix);
