@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_WRAPPER_HOST_API_H_
 #define PRORES_WRAPPER_HOST_API_H_
 

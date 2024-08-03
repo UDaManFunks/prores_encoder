@@ -310,7 +310,7 @@ namespace IOPlugin
     ////////////////////////////////////////////////////////////////////////////////
     HostUIConfigEntryRef::HostUIConfigEntryRef(const std::string& p_Name)
     {
-        m_StatusCode = SetProperty(pIOPropName, propTypeString, p_Name.c_str(), p_Name.size());
+        m_StatusCode = SetProperty(pIOPropName, propTypeString, p_Name.c_str(), static_cast<int>(p_Name.size()));
     }
 
     void HostUIConfigEntryRef::MakeSeparator()
@@ -338,7 +338,7 @@ namespace IOPlugin
             return;
         }
 
-        m_StatusCode = SetProperty(pIOPropUIValue, propTypeString, p_Text.c_str(), p_Text.size());
+        m_StatusCode = SetProperty(pIOPropUIValue, propTypeString, p_Text.c_str(), static_cast<int>(p_Text.size()));
     }
 
     void HostUIConfigEntryRef::MakeSlider(const std::string p_Text, const std::string p_Units,
@@ -366,10 +366,10 @@ namespace IOPlugin
         m_StatusCode = SetProperty(pIOPropUIStep, propTypeInt32, &p_Step, 1);
         if (m_StatusCode != errNone) return;
 
-        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Text.c_str(), p_Text.size());
+        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Text.c_str(), static_cast<int>(p_Text.size()));
         if (m_StatusCode != errNone) return;
 
-        m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Units.c_str(), p_Units.size());
+        m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Units.c_str(), static_cast<int>(p_Units.size()));
     }
 
     void HostUIConfigEntryRef::MakeButton(const std::string& p_Text, bool p_IsPressed /*= false*/)
@@ -380,7 +380,7 @@ namespace IOPlugin
         m_StatusCode = SetProperty(pIOPropUIType, propTypeUInt32, &uint32val, 1);
         if (m_StatusCode != errNone) return;
 
-        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Text.c_str(), p_Text.size());
+        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Text.c_str(), static_cast<int>(p_Text.size()));
         if (m_StatusCode != errNone) return;
 
         const uint8_t val = p_IsPressed ? 1 : 0;
@@ -394,10 +394,10 @@ namespace IOPlugin
         const uint32_t uint32val = uiEntryCheckbox;
         m_StatusCode = SetProperty(pIOPropUIType, propTypeUInt32, &uint32val, 1);
 
-        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Title.c_str(), p_Title.size());
+        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Title.c_str(), static_cast<int>(p_Title.size()));
         if (m_StatusCode != errNone) return;
 
-        m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Text.c_str(), p_Text.size());
+        m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Text.c_str(), static_cast<int>(p_Text.size()));
         if (m_StatusCode != errNone) return;
 
         const uint8_t val = p_IsChecked ? 1 : 0;
@@ -418,7 +418,7 @@ namespace IOPlugin
         const uint32_t uint32val = uiEntryCombobox;
         m_StatusCode = SetProperty(pIOPropUIType, propTypeUInt32, &uint32val, 1);
 
-        m_StatusCode = SetProperty(pIOPropUIValuesList, propTypeInt32, p_Values.data(), p_Values.size());
+        m_StatusCode = SetProperty(pIOPropUIValuesList, propTypeInt32, p_Values.data(), static_cast<int>(p_Values.size()));
 
         std::string valStrings;
         for (size_t i = 0; i < numItems; ++i)
@@ -430,18 +430,18 @@ namespace IOPlugin
             }
         }
 
-        m_StatusCode = SetProperty(pIOPropUITextsList, propTypeString, valStrings.c_str(), valStrings.size());
+        m_StatusCode = SetProperty(pIOPropUITextsList, propTypeString, valStrings.c_str(), static_cast<int>(valStrings.size()));
         if (m_StatusCode != errNone) return;
 
         m_StatusCode = SetProperty(pIOPropUIValue, propTypeInt32, &p_Value, 1);
         if (m_StatusCode != errNone) return;
 
-        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Text.c_str(), p_Text.size());
+        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Text.c_str(), static_cast<int>(p_Text.size()));
         if (m_StatusCode != errNone) return;
 
         if (!p_Suffix.empty())
         {
-            m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Suffix.c_str(), p_Suffix.size());
+            m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Suffix.c_str(), static_cast<int>(p_Suffix.size()));
         }
     }
 
@@ -459,7 +459,7 @@ namespace IOPlugin
         const uint32_t uint32val = uiEntryRadiobox;
         m_StatusCode = SetProperty(pIOPropUIType, propTypeUInt32, &uint32val, 1);
 
-        m_StatusCode = SetProperty(pIOPropUIValuesList, propTypeInt32, p_ValueVec.data(), p_ValueVec.size());
+        m_StatusCode = SetProperty(pIOPropUIValuesList, propTypeInt32, p_ValueVec.data(), static_cast<int>(p_ValueVec.size()));
 
         std::string valStrings;
         for (size_t i = 0; i < numItems; ++i)
@@ -471,13 +471,13 @@ namespace IOPlugin
             }
         }
 
-        m_StatusCode = SetProperty(pIOPropUITextsList, propTypeString, valStrings.c_str(), valStrings.size());
+        m_StatusCode = SetProperty(pIOPropUITextsList, propTypeString, valStrings.c_str(), static_cast<int>(valStrings.size()));
         if (m_StatusCode != errNone) return;
 
         m_StatusCode = SetProperty(pIOPropUIValue, propTypeInt32, &p_Value, 1);
         if (m_StatusCode != errNone) return;
 
-        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Label.c_str(), p_Label.size());
+        m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Label.c_str(), static_cast<int>(p_Label.size()));
     }
 
     void HostUIConfigEntryRef::MakeTextBox(const std::string& p_Label, const std::string& p_Text, const std::string& p_Suffix)
@@ -489,17 +489,17 @@ namespace IOPlugin
 
         if (!p_Label.empty())
         {
-            m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Label.c_str(), p_Label.size());
+            m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Label.c_str(), static_cast<int>(p_Label.size()));
             if (m_StatusCode != errNone) return;
         }
 
         if (!p_Suffix.empty())
         {
-            m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Suffix.c_str(), p_Suffix.size());
+            m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Suffix.c_str(), static_cast<int>(p_Suffix.size()));
             if (m_StatusCode != errNone) return;
         }
 
-        m_StatusCode = SetProperty(pIOPropUIValue, propTypeString, p_Text.c_str(), p_Text.size());
+        m_StatusCode = SetProperty(pIOPropUIValue, propTypeString, p_Text.c_str(), static_cast<int>(p_Text.size()));
     }
 
     void HostUIConfigEntryRef::MakeMarkerColorSelector(const std::string& p_Label, const std::string& p_Suffix, const std::string& p_Value)
@@ -511,19 +511,19 @@ namespace IOPlugin
 
         if (!p_Label.empty())
         {
-            m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Label.c_str(), p_Label.size());
+            m_StatusCode = SetProperty(pIOPropUILabel, propTypeString, p_Label.c_str(), static_cast<int>(p_Label.size()));
             if (m_StatusCode != errNone) return;
         }
 
         if (!p_Suffix.empty())
         {
-            m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Suffix.c_str(), p_Suffix.size());
+            m_StatusCode = SetProperty(pIOPropUISuffix, propTypeString, p_Suffix.c_str(), static_cast<int>(p_Suffix.size()));
             if (m_StatusCode != errNone) return;
         }
 
         if (!p_Value.empty())
         {
-            m_StatusCode = SetProperty(pIOPropUIValue, propTypeString, p_Value.c_str(), p_Value.size());
+            m_StatusCode = SetProperty(pIOPropUIValue, propTypeString, p_Value.c_str(), static_cast<int>(p_Value.size()));
         }
     }
 
