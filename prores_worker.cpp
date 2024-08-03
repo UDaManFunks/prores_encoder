@@ -36,7 +36,7 @@ ProResWorker::ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonPr
 	m_Height = pCommonProps->GetHeight();
 	m_iFrameRate = pCommonProps->GetFrameRateNum();
 	m_IsFullRange = pCommonProps->IsFullRange();
-	m_iBitDepth = 16;
+	m_iBitsPerSample = ProfileMap.BitsPerSample;
 	m_PixelFormat = ProfileMap.PixelFormat;
 	m_sProfileValue = ProfileMap.ProfileValue;
 
@@ -152,7 +152,7 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 
 		if (p_pBuff == NULL || !p_pBuff->IsValid()) {
 
-			if (! m_IsFlushed) {
+			if (m_IsFlushed) {
 				return errNone;
 			}
 

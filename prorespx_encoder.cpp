@@ -6,7 +6,7 @@
 
 const uint8_t ProResPXEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb8 };
 
-const ProfileMap ProResPXEncoder::s_ProfileMap[1] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"} };
+const ProfileMap ProResPXEncoder::s_ProfileMap[1] = { {"0", 'apco', 16, AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"} };
 
 StatusCode ProResPXEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
 {
@@ -70,7 +70,7 @@ StatusCode ProResPXEncoder::s_RegisterCodecs(HostListRef* p_pList)
 		codecInfo.SetProperty(pIOPropVSubsampling, propTypeUInt8, &vSampling, 1);
 	}
 
-	uint32_t vBitDepth = 16;
+	uint32_t vBitDepth = s_ProfileMap[0].BitsPerSample;
 	codecInfo.SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
 
 	std::vector<uint8_t> dataRangeVec;

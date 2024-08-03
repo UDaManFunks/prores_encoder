@@ -30,7 +30,7 @@ namespace IOPlugin {
 		uint32_t m_Height;
 		uint32_t m_ColorModel;
 		uint32_t m_iFrameRate;
-		int32_t m_iBitDepth;
+		int32_t m_iBitsPerSample;
 		std::string m_sProfileValue;
 		StatusCode m_Error;
 		AVPixelFormat m_InPixelFormat;
