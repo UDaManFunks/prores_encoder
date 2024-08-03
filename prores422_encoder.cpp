@@ -24,10 +24,6 @@ StatusCode ProRes422Encoder::s_RegisterCodecs(HostListRef* p_pList)
 
 	const char* logMessagePrefix = "ProRes422 Plugin :: s_RegisterCodecs";
 
-	{
-		g_Log(logLevelInfo, "%s", logMessagePrefix);
-	}
-
 	HostPropertyCollectionRef codecInfo;
 	if (!codecInfo.IsValid()) {
 		return errAlloc;

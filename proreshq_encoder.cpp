@@ -24,10 +24,6 @@ StatusCode ProResHQEncoder::s_RegisterCodecs(HostListRef* p_pList)
 
 	const char* logMessagePrefix = "ProResHQ Plugin :: s_RegisterCodecs";
 
-	{
-		g_Log(logLevelInfo, "%s", logMessagePrefix);
-	}
-
 	HostPropertyCollectionRef codecInfo;
 	if (!codecInfo.IsValid()) {
 		return errAlloc;
