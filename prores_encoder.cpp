@@ -53,7 +53,7 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 		return m_Error;
 	}
 
-	m_pWorker.reset(new ProResWorker(m_ColorModel, &m_CommonProps, m_pSettings.get(), m_ProfileMap));
+	m_pWorker.reset(new ProResWorker(m_ColorModel, &m_CommonProps, m_pSettings.get(), &m_ProfileMap));
 
 	return errNone;
 }
