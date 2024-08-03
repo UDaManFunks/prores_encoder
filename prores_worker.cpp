@@ -17,7 +17,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "wmcodecdspuuid.lib")
 
-ProResWorker::ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonProps, UISettingsController* pSettings)
+ProResWorker::ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonProps, UISettingsController* pSettings, ProfileMap ProfileMap)
 {
 	m_pContext = nullptr;
 	m_pPkt = nullptr;
@@ -36,9 +36,9 @@ ProResWorker::ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonPr
 	m_Height = pCommonProps->GetHeight();
 	m_iFrameRate = pCommonProps->GetFrameRateNum();
 	m_IsFullRange = pCommonProps->IsFullRange();
-	m_iBitDepth = pSettings->GetBitsPerSample();
-	m_PixelFormat = pSettings->GetProfile().PixelFormat;
-	m_sProfileValue = pSettings->GetProfile().ProfileValue;
+	m_iBitDepth = 16;
+	m_PixelFormat = ProfileMap.PixelFormat;
+	m_sProfileValue = ProfileMap.ProfileValue;
 
 	if (m_ColorModel == clrAYUV) {
 		m_InPixelFormat = AV_PIX_FMT_AYUV64LE;

@@ -1,18 +1,18 @@
 #include "uisettings_controller.h"
-#include "prores_encoder.h"
+#include "proreshq_encoder.h"
 
 #include <assert.h>
 #include <sstream>
 
-const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
+const uint8_t ProResHQEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb6 };
 
 // const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
 
 /* Cannot support multiple profiles with this CODEC as it each one has different FOURCC codes */
 
-const ProfileMap ProResEncoder::s_ProfileMap[1] = { {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"} };
+const ProfileMap ProResHQEncoder::s_ProfileMap[1] = { {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
 
-StatusCode ProResEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
+StatusCode ProResHQEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
 {
 	HostCodecConfigCommon commonProps;
 	commonProps.Load(p_pValues);
@@ -23,10 +23,10 @@ StatusCode ProResEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pVal
 	return settings.Render(p_pSettingsList);
 }
 
-StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
+StatusCode ProResHQEncoder::s_RegisterCodecs(HostListRef* p_pList)
 {
 
-	const char* logMessagePrefix = "ProRes Plugin :: s_RegisterCodecs";
+	const char* logMessagePrefix = "ProResHQ Plugin :: s_RegisterCodecs";
 
 	{
 		g_Log(logLevelInfo, "%s", logMessagePrefix);
@@ -37,18 +37,18 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 		return errAlloc;
 	}
 
-	codecInfo.SetProperty(pIOPropUUID, propTypeUInt8, ProResEncoder::s_UUID, 16);
+	codecInfo.SetProperty(pIOPropUUID, propTypeUInt8, ProResHQEncoder::s_UUID, 16);
 
 	const char* pCodecName = "Auto";
 	codecInfo.SetProperty(pIOPropName, propTypeString, pCodecName, static_cast<int>(strlen(pCodecName)));
 
-	const char* pCodecGroup = "ProRes 422";
+	const char* pCodecGroup = "ProRes 422 (HQ)";
 	codecInfo.SetProperty(pIOPropGroup, propTypeString, pCodecGroup, static_cast<int>(strlen(pCodecGroup)));
 
 	uint32_t vFourCC = s_ProfileMap[0].FourCC;
 	codecInfo.SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
 
-	g_Log(logLevelInfo, "ProRes Plugin :: s_RegisterCodecs :: fourCC = %d", vFourCC);
+	g_Log(logLevelInfo, "ProResHQ Plugin :: s_RegisterCodecs :: fourCC = %d", vFourCC);
 
 	uint32_t vMediaVideo = mediaVideo;
 	codecInfo.SetProperty(pIOPropMediaType, propTypeUInt32, &vMediaVideo, 1);
@@ -107,28 +107,29 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	return errNone;
 }
 
-ProResEncoder::ProResEncoder()
+ProResHQEncoder::ProResHQEncoder()
 	: m_Error(errNone)
 {
 
 }
 
-ProResEncoder::~ProResEncoder()
+ProResHQEncoder::~ProResHQEncoder()
 {
 
 }
 
-StatusCode ProResEncoder::DoInit(HostPropertyCollectionRef* p_pProps)
+StatusCode ProResHQEncoder::DoInit(HostPropertyCollectionRef* p_pProps)
 {
+
 	uint32_t vFourCC = 0;
 	p_pProps->GetUINT32(pIOPropFourCC, vFourCC);
 
-	g_Log(logLevelInfo, "ProRes Plugin :: DoInit :: fourCC = %d", vFourCC);
+	g_Log(logLevelInfo, "ProResHQ Plugin :: DoInit :: fourCC = %d", vFourCC);
 
 	return errNone;
 }
 
-StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
+StatusCode ProResHQEncoder::DoOpen(HostBufferRef* p_pBuff)
 {
 	m_CommonProps.Load(p_pBuff);
 
@@ -162,15 +163,15 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 	return errNone;
 }
 
-StatusCode ProResEncoder::DoProcess(HostBufferRef* p_pBuff)
+StatusCode ProResHQEncoder::DoProcess(HostBufferRef* p_pBuff)
 {
 	return m_pWorker->EncodeFrame(p_pBuff, m_pCallback);
 }
 
-void ProResEncoder::DoFlush()
+void ProResHQEncoder::DoFlush()
 {
 
-	g_Log(logLevelInfo, "ProRes Plugin :: DoFlush");
+	g_Log(logLevelInfo, "ProResHQ Plugin :: DoFlush");
 
 	if (m_Error != errNone) {
 		return;

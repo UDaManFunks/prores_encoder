@@ -1,6 +1,7 @@
 #include "plugin.h"
 #include "uisettings_controller.h"
 #include "prores_encoder.h"
+#include "proreshq_encoder.h"
 
 #include <assert.h>
 #include <cstring>
@@ -11,60 +12,72 @@ using namespace IOPlugin;
 
 StatusCode g_HandleGetInfo(HostPropertyCollectionRef* p_pProps)
 {
-    StatusCode err = p_pProps->SetProperty(pIOPropUUID, propTypeUInt8, pMyUUID, 16);
-    if (err == errNone)
-    {
-        err = p_pProps->SetProperty(pIOPropName, propTypeString, "Sample Plugin", strlen("Sample Plugin"));
-    }
+	StatusCode err = p_pProps->SetProperty(pIOPropUUID, propTypeUInt8, pMyUUID, 16);
+	if (err == errNone) {
+		err = p_pProps->SetProperty(pIOPropName, propTypeString, "Sample Plugin", strlen("Sample Plugin"));
+	}
 
-    return err;
+	return err;
 }
 
 StatusCode g_HandleCreateObj(unsigned char* p_pUUID, ObjectRef* p_ppObj)
 {
-    if (memcmp(p_pUUID, ProResEncoder::s_UUID, 16) == 0)
-    {
-        *p_ppObj = new ProResEncoder();
-        return errNone;
-    }
+	if (memcmp(p_pUUID, ProResEncoder::s_UUID, 16) == 0) {
+		*p_ppObj = new ProResEncoder();
+		return errNone;
+	}
 
-    return errUnsupported;
+	if (memcmp(p_pUUID, ProResHQEncoder::s_UUID, 16) == 0) {
+		*p_ppObj = new ProResHQEncoder();
+		return errNone;
+	}
+
+
+	return errUnsupported;
 }
 
 StatusCode g_HandlePluginStart()
 {
-    // perform libs initialization if needed
-    return errNone;
+	// perform libs initialization if needed
+	return errNone;
 }
 
 StatusCode g_HandlePluginTerminate()
 {
-    return errNone;
+	return errNone;
 }
 
 StatusCode g_ListCodecs(HostListRef* p_pList)
 {
-    StatusCode err = ProResEncoder::s_RegisterCodecs(p_pList);
-    if (err != errNone)
-    {
-        return err;
-    }
+	StatusCode err = ProResEncoder::s_RegisterCodecs(p_pList);
+	if (err != errNone) {
+		return err;
+	}
 
-    return errNone;
+	err = ProResHQEncoder::s_RegisterCodecs(p_pList);
+	if (err != errNone) {
+		return err;
+	}
+
+
+	return errNone;
 }
 
 StatusCode g_ListContainers(HostListRef* p_pList)
 {
-    return errNone;
+	return errNone;
 
 }
 
 StatusCode g_GetEncoderSettings(unsigned char* p_pUUID, HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
 {
-    if (memcmp(p_pUUID, ProResEncoder::s_UUID, 16) == 0)
-    {
-        return ProResEncoder::s_GetEncoderSettings(p_pValues, p_pSettingsList);
-    }
+	if (memcmp(p_pUUID, ProResEncoder::s_UUID, 16) == 0) {
+		return ProResEncoder::s_GetEncoderSettings(p_pValues, p_pSettingsList);
+	}
 
-    return errNoCodec;
+	if (memcmp(p_pUUID, ProResHQEncoder::s_UUID, 16) == 0) {
+		return ProResHQEncoder::s_GetEncoderSettings(p_pValues, p_pSettingsList);
+	}
+
+	return errNoCodec;
 }

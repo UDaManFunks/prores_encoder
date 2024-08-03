@@ -22,14 +22,11 @@ namespace IOPlugin {
 		StatusCode RenderQuality(HostListRef* p_pSettingsList);
 
 	public:
-		ProfileMap GetProfile() const;
-		int32_t GetBitsPerSample() const;
 		const std::string& GetMarkerColor() const;
 
 	private:
 		HostCodecConfigCommon m_CommonProps;
 		std::string m_MarkerColor;
-		int32_t m_Profile;
 	};
 
 }

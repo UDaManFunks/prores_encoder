@@ -19,7 +19,7 @@ namespace IOPlugin {
 	class ProResWorker final
 	{
 	public:
-		ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonProps, UISettingsController* pSettings);
+		ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonProps, UISettingsController* pSettings, ProfileMap ProfileMap);
 		~ProResWorker();
 		StatusCode EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback);
 
