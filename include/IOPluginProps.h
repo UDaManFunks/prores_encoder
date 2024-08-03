@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_INCLUDE_IOPLUGIN_PROPS_H_
 #define PRORES_INCLUDE_IOPLUGIN_PROPS_H_
 

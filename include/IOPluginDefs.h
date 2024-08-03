@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PRORES_INCLUDE_IOPLUGIN_DEFS_H_
+#define PRORES_INCLUDE_IOPLUGIN_DEFS_H_
 
 namespace IOPlugin
 {
@@ -134,3 +135,5 @@ namespace IOPlugin
      */
     typedef StatusCode (*pluginInitFunc)(const APIContext* p_pResolveAPI, APIContext* p_pPluginAPI);
 }
+
+#endif // PRORES_INCLUDE_IOPLUGIN_DEFS_H_
