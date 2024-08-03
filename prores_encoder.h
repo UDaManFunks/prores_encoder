@@ -38,7 +38,7 @@ namespace IOPlugin {
 		virtual StatusCode DoProcess(HostBufferRef* p_pBuff) override;
 		virtual void DoFlush() override;
 
-	protected:
+	private:
 		uint32_t m_ColorModel;
 		HostCodecConfigCommon m_CommonProps;
 		StatusCode m_Error;
