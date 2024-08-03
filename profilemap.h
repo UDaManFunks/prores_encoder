@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef PRORES_PROFILEMAP_H_
+#define PRORES_PROFILEMAP_H_
+
 #include <string>
 
 extern "C" {
@@ -17,3 +20,5 @@ namespace IOPlugin {
 	};
 
 }
+
+#endif // PRORES_PROFILEMAP_H_

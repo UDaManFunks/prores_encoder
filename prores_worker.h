@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef PRORES_WORKER_H_
+#define PRORES_WORKER_H_
+
 #include "uisettings_controller.h"
 
 #include <memory>
@@ -43,3 +46,5 @@ namespace IOPlugin {
 	};
 
 }
+
+#endif // PRORES_WORKER_H_

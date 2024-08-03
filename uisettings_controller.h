@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef PRORES_UISETTINGS_CONTROLLER_H_
+#define PRORES_UISETTINGS_CONTROLLER_H_
+
 #include "profilemap.h"
 #include "wrapper/plugin_api.h"
 
@@ -30,3 +33,5 @@ namespace IOPlugin {
 	};
 
 }
+
+#endif // PRORES_UISETINGS_CONTROLLER_H_

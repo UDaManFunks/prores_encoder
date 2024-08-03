@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef PRORES_BASE_H_
+#define PRORES_BASE_H_
+
 #include "uisettings_controller.h"
 #include "prores_worker.h"
 
@@ -44,3 +47,5 @@ namespace IOPlugin {
 	};
 
 }
+
+#endif // PRORES_BASE_H_

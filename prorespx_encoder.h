@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef PRORES_PX_H_
+#define PRORES_PX_H_
+
 #include "uisettings_controller.h"
 #include "prores_encoder.h"
 #include "prores_worker.h"
@@ -25,3 +28,5 @@ namespace IOPlugin {
 	};
 
 }
+
+#endif // PRORES_PX_H_
