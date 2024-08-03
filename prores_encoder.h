@@ -39,7 +39,6 @@ namespace IOPlugin {
 		virtual void DoFlush() override;
 
 	protected:
-		int32_t m_Profile;
 		uint32_t m_ColorModel;
 		HostCodecConfigCommon m_CommonProps;
 		StatusCode m_Error;
