@@ -5,7 +5,12 @@
 #include <sstream>
 
 const uint8_t ProResEncoder::s_UUID[] = { 0x21, 0x42, 0xe8, 0x41, 0xd8, 0xe4, 0x41, 0x4b, 0x87, 0x9e, 0xa4, 0x80, 0xfc, 0x90, 0xda, 0xb5 };
-const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
+
+// const ProfileMap ProResEncoder::s_ProfileMap[4] = { {"0", 'apco', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (Proxy)"}, {"1", 'apcs', AV_PIX_FMT_YUV422P10LE , "ProRes 422 (LT)"}, {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"}, {"3",'apch', AV_PIX_FMT_YUV422P10LE, "ProRes 422 (HQ)"} };
+
+/* Cannot support multiple profiles with this CODEC as it each one has different FOURCC codes */
+
+const ProfileMap ProResEncoder::s_ProfileMap[1] = { {"2",'apcn', AV_PIX_FMT_YUV422P10LE , "ProRes 422"} };
 
 StatusCode ProResEncoder::s_GetEncoderSettings(HostPropertyCollectionRef* p_pValues, HostListRef* p_pSettingsList)
 {
@@ -40,8 +45,10 @@ StatusCode ProResEncoder::s_RegisterCodecs(HostListRef* p_pList)
 	const char* pCodecGroup = "ProRes";
 	codecInfo.SetProperty(pIOPropGroup, propTypeString, pCodecGroup, static_cast<int>(strlen(pCodecGroup)));
 
-	uint32_t vFourCC = 'apcn';
+	uint32_t vFourCC = s_ProfileMap[0].FourCC;
 	codecInfo.SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
+
+	g_Log(logLevelInfo, "ProRes Plugin :: s_RegisterCodecs :: vFourCC = %d", vFourCC);
 
 	uint32_t vMediaVideo = mediaVideo;
 	codecInfo.SetProperty(pIOPropMediaType, propTypeUInt32, &vMediaVideo, 1);
@@ -113,6 +120,8 @@ ProResEncoder::~ProResEncoder()
 
 StatusCode ProResEncoder::DoInit(HostPropertyCollectionRef* p_pProps)
 {
+	// Inadequate documentation from Black Magic - cannot override pIOPropColorModel, pIOPropFourCC here - why not?
+
 	return errNone;
 }
 
@@ -125,11 +134,7 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 
 	p_pBuff->GetUINT32(pIOPropColorModel, m_ColorModel);
 
-	int32_t vFourCC = m_pSettings->GetProfile().FourCC;
-	p_pBuff->SetProperty(pIOPropFourCC, propTypeUInt32, &vFourCC, 1);
-
-	uint8_t vBitDepth = m_pSettings->GetBitsPerSample();
-	p_pBuff->SetProperty(pIOPropBitsPerSample, propTypeUInt32, &vBitDepth, 1);
+	// Inadequate documentation from Black Magic - are these supposed to be set in DoInit, or DoOpen, or per frame? */
 
 	int16_t vColorMatrix = 1;
 	int16_t vColorPrimaries = 1;
@@ -138,6 +143,8 @@ StatusCode ProResEncoder::DoOpen(HostBufferRef* p_pBuff)
 	p_pBuff->SetProperty(pIOColorMatrix, propTypeInt16, &vColorMatrix, 1);
 	p_pBuff->SetProperty(pIOPropColorPrimaries, propTypeInt16, &vColorPrimaries, 1);
 	p_pBuff->SetProperty(pIOTransferCharacteristics, propTypeInt16, &vTransferFunction, 1);
+
+	// multi-pass not supported by prores
 
 	uint8_t isMultiPass = 0;
 	StatusCode sts = p_pBuff->SetProperty(pIOPropMultiPass, propTypeUInt8, &isMultiPass, 1);

@@ -13,7 +13,7 @@ namespace IOPlugin {
 	{
 	public:
 		static const uint8_t s_UUID[];
-		static const ProfileMap s_ProfileMap[4];
+		static const ProfileMap s_ProfileMap[1];
 
 	public:
 		ProResEncoder();

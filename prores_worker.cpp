@@ -30,6 +30,7 @@ ProResWorker::ProResWorker(uint32_t ColorModel, HostCodecConfigCommon* pCommonPr
 
 	g_Log(logLevelInfo, "%s :: address of this = %I64x", logMessagePrefix, this);
 
+	m_IsFlushed = false;
 	m_ColorModel = ColorModel;
 	m_Width = pCommonProps->GetWidth();
 	m_Height = pCommonProps->GetHeight();
@@ -150,8 +151,15 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 	try {
 
 		if (p_pBuff == NULL || !p_pBuff->IsValid()) {
+
+			if (! m_IsFlushed) {
+				return errNone;
+			}
+
 			g_Log(logLevelInfo, "%s :: trying to flush", logMessagePrefix);
+
 			encoderRet = avcodec_send_frame(m_pContext, NULL);
+
 		} else {
 
 			char* pBuf = NULL;
@@ -226,6 +234,7 @@ StatusCode ProResWorker::EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRe
 		if (encoderRet == AVERROR_EOF) {
 			av_packet_unref(m_pPkt);
 			g_Log(logLevelInfo, "%s%s", logMessagePrefix, " :: AVERROR_EOF");
+			m_IsFlushed = true;
 			return errNone;
 		}
 

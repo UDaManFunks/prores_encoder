@@ -24,6 +24,7 @@ namespace IOPlugin {
 		StatusCode EncodeFrame(HostBufferRef* p_pBuff, HostCodecCallbackRef* pCallback);
 
 	private:
+		bool m_IsFlushed;
 		bool m_IsFullRange;
 		uint32_t m_Width;
 		uint32_t m_Height;

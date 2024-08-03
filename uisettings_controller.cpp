@@ -68,7 +68,7 @@ StatusCode UISettingsController::Render(HostListRef* p_pSettingsList)
 
 void UISettingsController::InitDefaults()
 {
-	m_Profile = 2;
+	m_Profile = 0;
 }
 
 StatusCode UISettingsController::RenderGeneral(HostListRef* p_pSettingsList)
@@ -101,9 +101,12 @@ StatusCode UISettingsController::RenderGeneral(HostListRef* p_pSettingsList)
 		std::vector<std::string> textsVec;
 		std::vector<int> valuesVec;
 
-		for (int i = 0; i < 4; i++) {
+		int i = 0;
+
+		for (auto profile : ProResEncoder::s_ProfileMap) {
 			valuesVec.push_back(i);
-			textsVec.push_back(ProResEncoder::s_ProfileMap[i].ProfileName);
+			textsVec.push_back(profile.ProfileName);
+			i++;
 		}
 
 		item.MakeComboBox("Encoder Profile", textsVec, valuesVec, m_Profile);
