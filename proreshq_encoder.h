@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_HQ_H_
 #define PRORES_HQ_H_
 

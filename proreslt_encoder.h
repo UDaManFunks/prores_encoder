@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_LT_H_
 #define PRORES_LT_H_
 

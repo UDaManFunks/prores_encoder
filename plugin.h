@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_PLUGIN_H_
 #define PRORES_PLUGIN_H_
 

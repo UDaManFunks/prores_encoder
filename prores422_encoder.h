@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_422_H_
 #define PRORES_422_H_
 

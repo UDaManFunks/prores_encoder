@@ -17,7 +17,7 @@ StatusCode g_HandleGetInfo(HostPropertyCollectionRef* p_pProps)
 {
 	StatusCode err = p_pProps->SetProperty(pIOPropUUID, propTypeUInt8, pMyUUID, 16);
 	if (err == errNone) {
-		err = p_pProps->SetProperty(pIOPropName, propTypeString, "Sample Plugin", strlen("Sample Plugin"));
+		err = p_pProps->SetProperty(pIOPropName, propTypeString, "Sample Plugin", static_cast<int>(strlen("Sample Plugin")));
 	}
 
 	return err;

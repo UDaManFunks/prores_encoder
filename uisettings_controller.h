@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_UISETTINGS_CONTROLLER_H_
 #define PRORES_UISETTINGS_CONTROLLER_H_
 

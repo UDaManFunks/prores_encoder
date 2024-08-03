@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_PX_H_
 #define PRORES_PX_H_
 

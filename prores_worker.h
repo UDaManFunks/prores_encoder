@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PRORES_WORKER_H_
 #define PRORES_WORKER_H_
 
