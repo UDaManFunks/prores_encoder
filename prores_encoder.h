@@ -25,7 +25,7 @@ namespace IOPlugin {
 
 	protected:
 		ProResEncoder();
-		~ProResEncoder();
+		virtual ~ProResEncoder();
 
 	protected:
 		virtual StatusCode DoInit(HostPropertyCollectionRef* p_pProps) override;
