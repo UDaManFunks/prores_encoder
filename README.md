@@ -77,23 +77,29 @@ Create a directory in your HOME directory named prores_plugin_build
 [Download FFMPEG]
 
 > cd ~/prores_plugin_build
+
 > git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 
 [Compile FFMPEG]
 
 > cd ~/prores_plugin_build/ffmpeg
+
 > ./configure --disable-programs --disable-shared --enable-static --enable-pic --enable-encoder=prores --prefix=../ffmpeg_pkg
+
 > make V=1 -j 8
+
 > make install
 
 [Download PRORES_encoder]
 
 > cd ~/prores_plugin_build
+
 > git clone https://github.com/UDaManFunks/prores_encoder
 
 [Compile PRORES_encoder]
 
 > cd ~/prores_plugin_build/prores_encoder
+
 > make
 
 [Packaging / Installing]
