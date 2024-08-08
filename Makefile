@@ -2,23 +2,23 @@ OS_TYPE := $(shell uname -s)
 BASE_DIR = ./
 OBJ_DIR = ./build
 BUILD_DIR = ./bin
-X265_DIR = ../x265
-CFLAGS = -O2 -fPIC -Iinclude -Iwrapper -I$(X265_DIR)/source
+FFMPEG_DIR = ../ffmpeg_pkg
+WRAPPER_DIR = ./wrapper
+CFLAGS = -O3 -fPIC -Iinclude -Iwrapper -I${FFMPEG_DIR}/include -D__STDC_CONSTANT_MACROS -Wno-multichar
+HEADERS = plugin.h uisettings_controller.h prores_worker.h prores_encoder.h prores422_encoder.h proreshq_encoder.h proreslt_encoder.h prorespx_encoder.h
+SRCS = plugin.cpp uisettings_controller.cpp prores_worker.cpp prores_encoder.cpp prores422_encoder.cpp proreshq_encoder.cpp proreslt_encoder.cpp prorespx_encoder.cpp
+OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
+TARGET = $(BUILD_DIR)/prores_encoder.dvcp
 
 ifeq ($(OS_TYPE), Linux)
-LDFLAGS = -shared -lpthread
+LDFLAGS = -shared -lpthread -Wl,-Bsymbolic
 else
 LDFLAGS = -dynamiclib
 endif
 
-TARGET = $(BUILD_DIR)/x265_encoder.dvcp5
-LDFLAGS += -L$(X265_DIR)/ -lx265_static.lib
+LDFLAGS += -L$(FFMPEG_DIR)/lib -lavcodec -lavfilter -lswscale -lswresample -lavutil
 
 .PHONY: all
-
-HEADERS = plugin.h x265_encoder.h
-SRCS = plugin.cpp ui_settings_controller.cpp x265_encoder.cpp 
-OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 all: prereq make-subdirs $(HEADERS) $(SRCS) $(OBJS) $(TARGET)
 
@@ -30,14 +30,16 @@ $(OBJ_DIR)/%.o: %.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(TARGET):
-	$(CC) $(OBJ_DIR)/*.o $(LDFLAGS) -o $(TARGET)
+	$(CC) $(WRAPPER_DIR)/build/*.o $(OBJ_DIR)/*.o $(LDFLAGS) -o $(TARGET)
 
 clean: clean-subdirs
-	rm -rf $(OBJ_DIR)
-	rm -rf $(BUILD_DIR)
+	rm $(OBJS)
+	rmdir $(OBJ_DIR)
+	rm  $(TARGET)
+	rmdir $(BUILD_DIR)
 
 make-subdirs:
-	(cd wrapper; make; cd ..)
+	(cd $(WRAPPER_DIR); make; cd ..)
 
 clean-subdirs:
-	(cd wrapper; make clean; cd ..)
+	(cd $(WRAPPER_DIR); make clean; cd ..)
