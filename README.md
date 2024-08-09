@@ -32,7 +32,7 @@ Create Directory C:\VideoEditingUtils\prores_plugin_build
 3) Execute the command "msys2_shell.cmd -mingw64 -full-path"
 4) This will open up another terminal, type in the following commands (in the new terminal)
 5) cd /C/VideoEditingUtils/prores_plugin_build/ffmpeg
-6) CC=cl ./configure --toolchain=msvc  --pkg-config-flags=--static --disable-programs --disable-shared --enable-static --extra-ldflags=-static --enable-encoder=prores --prefix=/C/VideoEditingUtils/prores_plugin_build/ffmpeg_pkg
+6) CC=cl ./configure --toolchain=msvc --disable-programs --disable-shared --disable-debug --enable-static --prefix=/C/VideoEditingUtils/prores_plugin_build/ffmpeg_pkg
 7) make V=1 -j 8
 8) make install
    
@@ -84,7 +84,7 @@ Create a directory in your HOME directory named prores_plugin_build
 
 > cd ~/prores_plugin_build/ffmpeg
 
-> ./configure --disable-programs --disable-shared --enable-static --enable-pic --disable-debug --enable-encoder=prores --prefix=../ffmpeg_pkg
+> ./configure --disable-programs --disable-shared --enable-static --enable-pic --disable-debug --prefix=../ffmpeg_pkg
 
 > make V=1 -j 8
 
