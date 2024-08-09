@@ -4,14 +4,14 @@ OBJ_DIR = ./build
 BUILD_DIR = ./bin
 FFMPEG_DIR = ../ffmpeg_pkg
 WRAPPER_DIR = ./wrapper
-CFLAGS = -O3 -fPIC -Iinclude -Iwrapper -I${FFMPEG_DIR}/include -D__STDC_CONSTANT_MACROS -Wno-multichar
+CFLAGS = -O3 -Iinclude -Iwrapper -I${FFMPEG_DIR}/include -fPIC -std=c++20 -D__STDC_CONSTANT_MACROS -Wno-multichar
 HEADERS = plugin.h uisettings_controller.h prores_worker.h prores_encoder.h prores422_encoder.h proreshq_encoder.h proreslt_encoder.h prorespx_encoder.h
 SRCS = plugin.cpp uisettings_controller.cpp prores_worker.cpp prores_encoder.cpp prores422_encoder.cpp proreshq_encoder.cpp proreslt_encoder.cpp prorespx_encoder.cpp
 OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 TARGET = $(BUILD_DIR)/prores_encoder.dvcp
 
 ifeq ($(OS_TYPE), Linux)
-LDFLAGS = -shared -lpthread -Wl,-Bsymbolic
+LDFLAGS = -fPIC -shared -lpthread -Wl,-Bsymbolic
 else
 LDFLAGS = -dynamiclib
 endif
