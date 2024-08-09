@@ -2,23 +2,23 @@ OS_TYPE := $(shell uname -s)
 BASE_DIR = ./
 OBJ_DIR = ./build
 BUILD_DIR = ./bin
-FFMPEG_DIR = ../ffmpeg_pkg
-WRAPPER_DIR = ./wrapper
-CFLAGS = -O3 -fPIC -Iinclude -Iwrapper -I${FFMPEG_DIR}/include -D__STDC_CONSTANT_MACROS -Wno-multichar
-HEADERS = plugin.h uisettings_controller.h prores_worker.h prores_encoder.h prores422_encoder.h proreshq_encoder.h proreslt_encoder.h prorespx_encoder.h
-SRCS = plugin.cpp uisettings_controller.cpp prores_worker.cpp prores_encoder.cpp prores422_encoder.cpp proreshq_encoder.cpp proreslt_encoder.cpp prorespx_encoder.cpp
-OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
-TARGET = $(BUILD_DIR)/prores_encoder.dvcp
+X264_DIR = ../x264
+CFLAGS = -O3 -Iinclude -Iwrapper -I$(X264_DIR) -Wall -Wno-unused-variable -Wno-multichar -fPIC -std=c++20
 
 ifeq ($(OS_TYPE), Linux)
-LDFLAGS = -shared -lpthread -Wl,-Bsymbolic
+LDFLAGS = -shared -lpthread
 else
 LDFLAGS = -dynamiclib
 endif
 
-LDFLAGS += -L$(FFMPEG_DIR)/lib -lavcodec -lavfilter -lswscale -lswresample -lavutil
+TARGET = $(BUILD_DIR)/x264_encoder.dvcp
+LDFLAGS += -L$(X264_DIR) -lx264
 
 .PHONY: all
+
+HEADERS = plugin.h x264_encoder.h x264_encoder_main.h x264_encoder_high.h x264_encoder_h422.h
+SRCS = plugin.cpp x264_encoder.cpp x264_encoder_main.cpp x264_encoder_high.cpp x264_encoder_h422.cpp
+OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 all: prereq make-subdirs $(HEADERS) $(SRCS) $(OBJS) $(TARGET)
 
@@ -30,16 +30,14 @@ $(OBJ_DIR)/%.o: %.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(TARGET):
-	$(CC) $(WRAPPER_DIR)/build/*.o $(OBJ_DIR)/*.o $(LDFLAGS) -o $(TARGET)
+	$(CC) $(OBJ_DIR)/*.o $(LDFLAGS) -o $(TARGET)
 
 clean: clean-subdirs
-	rm $(OBJS)
-	rmdir $(OBJ_DIR)
-	rm  $(TARGET)
-	rmdir $(BUILD_DIR)
+	rm -rf $(OBJ_DIR)
+	rm -rf $(BUILD_DIR)
 
 make-subdirs:
-	(cd $(WRAPPER_DIR); make; cd ..)
+	(cd wrapper; make; cd ..)
 
 clean-subdirs:
-	(cd $(WRAPPER_DIR); make clean; cd ..)
+	(cd wrapper; make clean; cd ..)
