@@ -1,6 +1,6 @@
 BASE_DIR = ../
 OBJ_DIR = ./build
-CFLAGS = -O3 -I../include -Wall -Wno-unused-variable -Wno-multichar -fPIC -std=c++20
+CFLAGS = -O3 -I../include -fPIC -std=c++20 -Wall -Wno-unused-variable -Wno-multichar
 HEADERS = host_api.h plugin_api.h
 SRCS = host_api.cpp plugin_api.cpp
 OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
