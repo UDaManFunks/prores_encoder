@@ -84,7 +84,7 @@ Create a directory in your HOME directory named prores_plugin_build
 
 > cd ~/prores_plugin_build/ffmpeg
 
-> ./configure --disable-programs --disable-shared --enable-static --enable-pic --enable-encoder=prores --prefix=../ffmpeg_pkg
+> ./configure --disable-programs --disable-shared --enable-static --enable-pic --disable-debug --enable-encoder=prores --prefix=../ffmpeg_pkg
 
 > make V=1 -j 8
 
