@@ -1,6 +1,6 @@
 CC=cl
 BUILDDIR=build
-CFLAGS=-I..\include /Fo:$(BUILDDIR)\ /c /EHsc /std:c++20 /W3 /O2
+CFLAGS=-I../include /Fo:$(BUILDDIR)\ /c /EHsc /std:c++20 /W3 /O2
 OBJS = host_api.obj plugin_api.obj
 
 all: prereq $(OBJS)
