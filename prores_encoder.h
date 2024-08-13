@@ -4,7 +4,7 @@
 #include "uisettings_controller.h"
 #include "prores_worker.h"
 
-#include <memory>
+// #include <memory>
 
 using namespace IOPlugin;
 

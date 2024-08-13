@@ -4,8 +4,6 @@
 #include "profilemap.h"
 #include "wrapper/plugin_api.h"
 
-#include <memory>
-
 namespace IOPlugin {
 
 	class UISettingsController final

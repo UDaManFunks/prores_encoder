@@ -1,11 +1,7 @@
 #ifndef PRORES_422_H_
 #define PRORES_422_H_
 
-#include "uisettings_controller.h"
 #include "prores_encoder.h"
-#include "prores_worker.h"
-
-#include <memory>
 
 using namespace IOPlugin;
 

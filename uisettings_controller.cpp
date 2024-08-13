@@ -1,8 +1,6 @@
-#include "uisettings_controller.h"
 #include "prores_encoder.h"
 
 #include <assert.h>
-#include <sstream>
 
 UISettingsController::UISettingsController()
 {

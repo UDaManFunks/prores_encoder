@@ -1,9 +1,7 @@
 #ifndef PRORES_LT_H_
 #define PRORES_LT_H_
 
-#include "uisettings_controller.h"
 #include "prores_encoder.h"
-#include "prores_worker.h"
 
 #include <memory>
 
