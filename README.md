@@ -112,8 +112,8 @@ Move the newly built binary the to the folder you created
 
 > sudo mv bin/prores_encoder.dvcp /opt/resolve/IOPlugins/prores_encoder.dvcp.bundle/Contents/Linux-x86-64/
 
-> chown root:root /opt/resolve/IOPlugins/prores_encoder.dvcp.bundle/Contents/Linux-x86-64/proress_encoder.dvcp
+> sudo chown root:root /opt/resolve/IOPlugins/prores_encoder.dvcp.bundle/Contents/Linux-x86-64/prores_encoder.dvcp
 
-> chmod 755 /opt/resolve/IOPlugins/prores_encoder.dvcp.bundle/Contents/Linux-x86-64/proress_encoder.dvcp
+> sudo chmod 755 /opt/resolve/IOPlugins/prores_encoder.dvcp.bundle/Contents/Linux-x86-64/prores_encoder.dvcp
 
 Restart Davinci Resolve Studio
