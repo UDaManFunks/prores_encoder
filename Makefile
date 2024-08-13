@@ -9,9 +9,10 @@ HEADERS = plugin.h uisettings_controller.h prores_worker.h prores_encoder.h pror
 SRCS = plugin.cpp uisettings_controller.cpp prores_worker.cpp prores_encoder.cpp prores422_encoder.cpp proreshq_encoder.cpp proreslt_encoder.cpp prorespx_encoder.cpp
 OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 TARGET = $(BUILD_DIR)/prores_encoder.dvcp
+CPP = g++
 
 ifeq ($(OS_TYPE), Linux)
-LDFLAGS = -fPIC -shared -lpthread -Wl,-Bsymbolic
+LDFLAGS = -fPIC -shared -lpthread -Wl,-Bsymbolic -Wl,--no-undefined -static-libstdc++ -static-libgcc -std=c++20 -lstdc++
 else
 LDFLAGS = -dynamiclib
 endif
@@ -27,10 +28,10 @@ prereq:
 	mkdir -p $(BUILD_DIR)
 
 $(OBJ_DIR)/%.o: %.cpp
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CPP) -c -o $@ $< $(CFLAGS)
 
 $(TARGET):
-	$(CC) $(WRAPPER_DIR)/build/*.o $(OBJ_DIR)/*.o $(LDFLAGS) -o $(TARGET)
+	$(CPP) $(WRAPPER_DIR)/build/*.o $(OBJ_DIR)/*.o $(LDFLAGS) -o $(TARGET)
 
 clean: clean-subdirs
 	rm $(OBJS)
